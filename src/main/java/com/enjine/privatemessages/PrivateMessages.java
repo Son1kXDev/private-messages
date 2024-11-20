@@ -21,6 +21,7 @@ public class PrivateMessages implements ModInitializer {
     public static PrivateMessagesConfig config;
 
     private final Map<ServerPlayerEntity, ServerPlayerEntity> lastMessageSender = new HashMap<>();
+    private final Map<ServerPlayerEntity, Set<ServerPlayerEntity>> ignoredPlayers = new HashMap<>();
 
     @Override
     public void onInitialize() {
@@ -32,7 +33,6 @@ public class PrivateMessages implements ModInitializer {
             registerMessageCommand(dispatcher, "t");
             registerMessageCommand(dispatcher, "m");
             
-            // Overwrite vanilla commands
             registerOverwriteMessageCommand(dispatcher, "w");
             registerOverwriteMessageCommand(dispatcher, "msg");
             registerOverwriteMessageCommand(dispatcher, "tell");
@@ -40,7 +40,8 @@ public class PrivateMessages implements ModInitializer {
             registerReplyCommand(dispatcher, "reply");
             registerReplyCommand(dispatcher, "r");
 
-            // Register reload command
+            registerIgnoreCommand(dispatcher);
+
             registerReloadCommand(dispatcher);
         });
     }
@@ -101,6 +102,20 @@ public class PrivateMessages implements ModInitializer {
                         config = ConfigManager.loadConfig();
                         context.getSource().sendFeedback(() -> Text.of("Configuration reloaded."), false);
                         return 1; // Success
+                    })
+                )
+        );
+    }
+
+    private void registerIgnoreCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+            CommandManager.literal("ignore")
+                .then(CommandManager.argument("player", EntityArgumentType.player())
+                    .executes(context -> {
+                        ServerPlayerEntity sender = context.getSource().getPlayer();
+                        ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
+
+                        return toggleIgnorePlayer(sender, target, context.getSource());
                     })
                 )
         );
