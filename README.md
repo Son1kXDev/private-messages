@@ -5,6 +5,7 @@
 ## Features
 - **Send Private Messages**: Use `/pm`, `/m`, `/t`, `/msg`, `/tell` commands to send private messages to other players.
 - **Reply to Last Message**: Quickly reply to the last received private message using `/reply` or `/r`.
+- **Reply by Clicking**: You can also reply to a private message simply by clicking on it! Clicking on the message will automatically suggest the reply command with the sender’s name.
 - **Ignore Players**: Block messages from specific players using the `/ignore` command.
 - **Notification Settings**: Enable or disable notification sounds for private messages using `/private-messages notification [on|off]`.
 - **Help Command**: Displays a list of commands and their usage with `/private-messages help`.
