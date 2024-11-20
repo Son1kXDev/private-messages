@@ -1,8 +1,10 @@
 package com.enjine.privatemessages;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -10,9 +12,15 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
 
+import java.util.Set;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +52,7 @@ public class PrivateMessages implements ModInitializer {
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
 
+            registerHelpCommand(dispatcher);
             registerReloadCommand(dispatcher);
         });
     }
@@ -124,13 +133,29 @@ public class PrivateMessages implements ModInitializer {
         );
     }
 
-        private void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+    private void registerHelpCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+            CommandManager.literal("private-messages")
+                .then(CommandManager.literal("help")
+                    .executes(context -> {
+                        ServerCommandSource source = context.getSource();
+                        for (String line : config.helpMessages) {
+                            source.sendFeedback(() -> Text.literal(line), false);
+                        }
+                        return 1; // Success
+                    })
+                )
+        );
+    }
+
+
+    private void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
             CommandManager.literal("private-messages")
                 .then(CommandManager.literal("reload")
                     .executes(context -> {
                         config = ConfigManager.loadConfig();
-                        context.getSource().sendFeedback(() -> Text.of("Configuration reloaded."), false);
+                        context.getSource().sendFeedback(() -> Text.literal("Configuration reloaded."), false);
                         return 1; // Success
                     })
                 )
@@ -138,26 +163,38 @@ public class PrivateMessages implements ModInitializer {
     }
 
     private int sendPrivateMessage(ServerCommandSource source, String targetName, String message) {
+        ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity targetPlayer = source.getServer().getPlayerManager().getPlayer(targetName);
 
         if (targetPlayer != null) {
 
             Set<ServerPlayerEntity> ignoredSet = ignoredPlayers.getOrDefault(targetPlayer, new HashSet<>());
             if (ignoredSet.contains(sender)) {
-                sender.sendMessage(Text.of(config.ignoredByPlayerMessage.replace("{target}", targetName)), false);
+                sender.sendMessage(Text.literal(config.cannotSendToIgnoredPlayerMessage.replace("{player}", targetName)), false);
+                return 0; // Blocked
+            }
+
+            Set<ServerPlayerEntity> senderIgnoredSet = ignoredPlayers.getOrDefault(sender, new HashSet<>());
+            if (senderIgnoredSet.contains(targetPlayer)) {
+                sender.sendMessage(Text.literal(config.ignoredByPlayerMessage.replace("{player}", targetName)), false);
                 return 0; // Blocked
             }
 
             lastMessageSender.put(targetPlayer, source.getPlayer());
-            String receiveMessage = config.receiveMessageFormat
-                .replace("{sender}", source.getName())
-                .replace("{message}", message);
+            Text receiveMessage = Text.literal(config.receiveMessageFormat
+            .replace("{sender}", source.getName())
+            .replace("{message}", message))
+            .styled(style -> style
+                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/pm " + source.getName() + " "))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(config.clickToReplyHoverText)))
+                .withColor(Formatting.YELLOW)
+            );
             String sendMessage = config.sendMessageFormat
                 .replace("{target}", targetName)
                 .replace("{message}", message);
 
-            targetPlayer.sendMessage(Text.of(receiveMessage), false);
-            source.sendMessage(Text.of(sendMessage));
+            targetPlayer.sendMessage(receiveMessage, false);
+            source.sendMessage(Text.literal(sendMessage));
             
             // Play sound to target player
             if (notificationSettings.getOrDefault(targetPlayer, true)) {
@@ -167,7 +204,7 @@ public class PrivateMessages implements ModInitializer {
             return 1; // Success
         } else {
             String playerNotFoundMessage = config.playerNotFoundMessage.replace("{target}", targetName);
-            source.sendError(Text.of(playerNotFoundMessage));
+            source.sendError(Text.literal(playerNotFoundMessage));
             return 0; // Error
         }
     }
@@ -184,8 +221,8 @@ public class PrivateMessages implements ModInitializer {
                 .replace("{target}", lastSender.getName().getString())
                 .replace("{message}", message);
 
-            lastSender.sendMessage(Text.of(receiveMessage), false);
-            source.sendMessage(Text.of(sendMessage));
+            lastSender.sendMessage(Text.literal(receiveMessage), false);
+            source.sendMessage(Text.literal(sendMessage));
             
             // Play sound to the last sender
             if (notificationSettings.getOrDefault(lastSender, true)) {
@@ -194,7 +231,7 @@ public class PrivateMessages implements ModInitializer {
             
             return 1; // Success
         } else {
-            source.sendError(Text.of(config.noLastMessageError));
+            source.sendError(Text.literal(config.noLastMessageError));
             return 0; // Error
         }
     }
@@ -205,10 +242,10 @@ public class PrivateMessages implements ModInitializer {
         Set<ServerPlayerEntity> ignoredSet = ignoredPlayers.get(sender);
         if (ignoredSet.contains(target)) {
             ignoredSet.remove(target);
-            source.sendFeedback(Text.of(config.ignoreRemovedMessage.replace("{player}", target.getName().getString())), false);
+            source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getName().getString())), false);
         } else {
             ignoredSet.add(target);
-            source.sendFeedback(Text.of(config.ignoreAddedMessage.replace("{player}", target.getName().getString())), false);
+            source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getName().getString())), false);
         }
         return 1; // Success
     }
@@ -220,7 +257,7 @@ public class PrivateMessages implements ModInitializer {
             ? config.notificationEnabledMessage
             : config.notificationDisabledMessage;
 
-        source.sendFeedback(Text.of(message), false);
+        source.sendFeedback(() -> Text.literal(message), false);
         return 1; // Success
     }
 }
