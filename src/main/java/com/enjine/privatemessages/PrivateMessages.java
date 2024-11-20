@@ -1,32 +1,159 @@
 package com.enjine.privatemessages;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.tree.CommandNode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PrivateMessages implements ModInitializer {
-	public static final String MOD_ID = "private-messages";
+    public static final String MOD_ID = "private-messages";
+    public static PrivateMessagesConfig config;
 
-	@Override
+    private final Map<ServerPlayerEntity, ServerPlayerEntity> lastMessageSender = new HashMap<>();
+
+    @Override
     public void onInitialize() {
-        CommandManager.literal("pm").then(CommandManager.argument("player", StringArgumentType.string())
-            .then(CommandManager.argument("message", StringArgumentType.greedyString())
-                .executes(context -> {
-                    String targetName = StringArgumentType.getString(context, "player");
-                    String message = StringArgumentType.getString(context, "message");
-                    ServerPlayerEntity targetPlayer = context.getSource().getServer().getPlayerManager().getPlayer(targetName);
+        config = ConfigManager.loadConfig();
 
-                    if (targetPlayer != null) {
-                        targetPlayer.sendMessage(Text.of("[PM] " + context.getSource().getName() + ": " + message));
-                        context.getSource().sendMessage(Text.of("[PM -> " + targetName + "]: " + message));
-                        return 1; // Success
-                    } else {
-                        context.getSource().sendError(Text.of("Player not found."));
-                        return 0; // Failure
-                    }
-                })
-            )
+        // Register commands using CommandRegistrationCallback
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            registerMessageCommand(dispatcher, "pm");
+            registerMessageCommand(dispatcher, "t");
+            registerMessageCommand(dispatcher, "m");
+            
+            // Overwrite vanilla commands
+            registerOverwriteMessageCommand(dispatcher, "w");
+            registerOverwriteMessageCommand(dispatcher, "msg");
+            registerOverwriteMessageCommand(dispatcher, "tell");
+
+            registerReplyCommand(dispatcher, "reply");
+            registerReplyCommand(dispatcher, "r");
+
+            // Register reload command
+            registerReloadCommand(dispatcher);
+        });
+    }
+
+    private void registerMessageCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+            CommandManager.literal(commandName)
+                .then(CommandManager.argument("player", EntityArgumentType.player())
+                    .then(CommandManager.argument("message", StringArgumentType.greedyString())
+                        .executes(context -> {
+                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+                            String message = StringArgumentType.getString(context, "message");
+                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                        })
+                    )
+                )
         );
+    }
+
+    private void registerOverwriteMessageCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        // Check if the command already exists and unregister it
+        CommandNode<ServerCommandSource> node = dispatcher.getRoot().getChild(commandName);
+        if (node != null) {
+            dispatcher.getRoot().getChildren().remove(node);
+        }
+        // Register the new command
+        dispatcher.register(
+            CommandManager.literal(commandName)
+                .then(CommandManager.argument("player", EntityArgumentType.player())
+                    .then(CommandManager.argument("message", StringArgumentType.greedyString())
+                        .executes(context -> {
+                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+                            String message = StringArgumentType.getString(context, "message");
+                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                        })
+                    )
+                )
+        );
+    }
+
+    private void registerReplyCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+            CommandManager.literal(commandName)
+                .then(CommandManager.argument("message", StringArgumentType.greedyString())
+                    .executes(context -> {
+                        String message = StringArgumentType.getString(context, "message");
+                        return replyToLastMessage(context.getSource(), message);
+                    })
+                )
+        );
+    }
+
+    private void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+            CommandManager.literal("private-messages")
+                .then(CommandManager.literal("reload")
+                    .executes(context -> {
+                        config = ConfigManager.loadConfig();
+                        context.getSource().sendFeedback(() -> Text.of("Configuration reloaded."), false);
+                        return 1; // Success
+                    })
+                )
+        );
+    }
+
+    private int sendPrivateMessage(ServerCommandSource source, String targetName, String message) {
+        ServerPlayerEntity targetPlayer = source.getServer().getPlayerManager().getPlayer(targetName);
+
+        if (targetPlayer != null) {
+            lastMessageSender.put(targetPlayer, source.getPlayer());
+            String receiveMessage = config.receiveMessageFormat
+                .replace("{sender}", source.getName())
+                .replace("{message}", message);
+            String sendMessage = config.sendMessageFormat
+                .replace("{target}", targetName)
+                .replace("{message}", message);
+
+            targetPlayer.sendMessage(Text.of(receiveMessage), false);
+            source.sendMessage(Text.of(sendMessage));
+            
+            // Play sound to target player
+            targetPlayer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            
+            return 1; // Success
+        } else {
+            String playerNotFoundMessage = config.playerNotFoundMessage.replace("{target}", targetName);
+            source.sendError(Text.of(playerNotFoundMessage));
+            return 0; // Error
+        }
+    }
+
+    private int replyToLastMessage(ServerCommandSource source, String message) {
+        ServerPlayerEntity sender = source.getPlayer();
+        ServerPlayerEntity lastSender = lastMessageSender.get(sender);
+
+        if (lastSender != null) {
+            String receiveMessage = config.receiveMessageFormat
+                .replace("{sender}", sender.getName().getString())
+                .replace("{message}", message);
+            String sendMessage = config.sendMessageFormat
+                .replace("{target}", lastSender.getName().getString())
+                .replace("{message}", message);
+
+            lastSender.sendMessage(Text.of(receiveMessage), false);
+            source.sendMessage(Text.of(sendMessage));
+            
+            // Play sound to the last sender
+            lastSender.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            
+            return 1; // Success
+        } else {
+            source.sendError(Text.of(config.noLastMessageError));
+            return 0; // Error
+        }
     }
 }
