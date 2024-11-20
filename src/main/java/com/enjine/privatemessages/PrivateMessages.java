@@ -22,6 +22,7 @@ public class PrivateMessages implements ModInitializer {
 
     private final Map<ServerPlayerEntity, ServerPlayerEntity> lastMessageSender = new HashMap<>();
     private final Map<ServerPlayerEntity, Set<ServerPlayerEntity>> ignoredPlayers = new HashMap<>();
+    private final Map<ServerPlayerEntity, Boolean> notificationSettings = new HashMap<>();
 
     @Override
     public void onInitialize() {
@@ -41,6 +42,7 @@ public class PrivateMessages implements ModInitializer {
             registerReplyCommand(dispatcher, "r");
 
             registerIgnoreCommand(dispatcher);
+            registerNotificationCommand(dispatcher);
 
             registerReloadCommand(dispatcher);
         });
@@ -94,19 +96,6 @@ public class PrivateMessages implements ModInitializer {
         );
     }
 
-    private void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(
-            CommandManager.literal("private-messages")
-                .then(CommandManager.literal("reload")
-                    .executes(context -> {
-                        config = ConfigManager.loadConfig();
-                        context.getSource().sendFeedback(() -> Text.of("Configuration reloaded."), false);
-                        return 1; // Success
-                    })
-                )
-        );
-    }
-
     private void registerIgnoreCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
             CommandManager.literal("ignore")
@@ -121,10 +110,44 @@ public class PrivateMessages implements ModInitializer {
         );
     }
 
+    private void registerNotificationCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+            CommandManager.literal("private-messages")
+                .then(CommandManager.literal("notification")
+                    .then(CommandManager.literal("on")
+                        .executes(context -> setNotification(context.getSource().getPlayer(), true, context.getSource()))
+                    )
+                    .then(CommandManager.literal("off")
+                        .executes(context -> setNotification(context.getSource().getPlayer(), false, context.getSource()))
+                    )
+                )
+        );
+    }
+
+        private void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+            CommandManager.literal("private-messages")
+                .then(CommandManager.literal("reload")
+                    .executes(context -> {
+                        config = ConfigManager.loadConfig();
+                        context.getSource().sendFeedback(() -> Text.of("Configuration reloaded."), false);
+                        return 1; // Success
+                    })
+                )
+        );
+    }
+
     private int sendPrivateMessage(ServerCommandSource source, String targetName, String message) {
         ServerPlayerEntity targetPlayer = source.getServer().getPlayerManager().getPlayer(targetName);
 
         if (targetPlayer != null) {
+
+            Set<ServerPlayerEntity> ignoredSet = ignoredPlayers.getOrDefault(targetPlayer, new HashSet<>());
+            if (ignoredSet.contains(sender)) {
+                sender.sendMessage(Text.of(config.ignoredByPlayerMessage.replace("{target}", targetName)), false);
+                return 0; // Blocked
+            }
+
             lastMessageSender.put(targetPlayer, source.getPlayer());
             String receiveMessage = config.receiveMessageFormat
                 .replace("{sender}", source.getName())
@@ -137,7 +160,9 @@ public class PrivateMessages implements ModInitializer {
             source.sendMessage(Text.of(sendMessage));
             
             // Play sound to target player
-            targetPlayer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            if (notificationSettings.getOrDefault(targetPlayer, true)) {
+                targetPlayer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            }
             
             return 1; // Success
         } else {
@@ -163,12 +188,39 @@ public class PrivateMessages implements ModInitializer {
             source.sendMessage(Text.of(sendMessage));
             
             // Play sound to the last sender
-            lastSender.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            if (notificationSettings.getOrDefault(lastSender, true)) {
+                lastSender.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            }
             
             return 1; // Success
         } else {
             source.sendError(Text.of(config.noLastMessageError));
             return 0; // Error
         }
+    }
+
+    private int toggleIgnorePlayer(ServerPlayerEntity sender, ServerPlayerEntity target, ServerCommandSource source) {
+        ignoredPlayers.putIfAbsent(sender, new HashSet<>());
+
+        Set<ServerPlayerEntity> ignoredSet = ignoredPlayers.get(sender);
+        if (ignoredSet.contains(target)) {
+            ignoredSet.remove(target);
+            source.sendFeedback(Text.of(config.ignoreRemovedMessage.replace("{player}", target.getName().getString())), false);
+        } else {
+            ignoredSet.add(target);
+            source.sendFeedback(Text.of(config.ignoreAddedMessage.replace("{player}", target.getName().getString())), false);
+        }
+        return 1; // Success
+    }
+
+    private int setNotification(ServerPlayerEntity player, boolean enabled, ServerCommandSource source) {
+        notificationSettings.put(player, enabled);
+
+        String message = enabled
+            ? config.notificationEnabledMessage
+            : config.notificationDisabledMessage;
+
+        source.sendFeedback(Text.of(message), false);
+        return 1; // Success
     }
 }

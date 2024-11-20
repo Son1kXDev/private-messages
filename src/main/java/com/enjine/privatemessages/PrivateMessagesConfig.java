@@ -8,4 +8,11 @@ public class PrivateMessagesConfig {
 
     public String playerNotFoundMessage = "§cPlayer {target} not found.";
     public String noLastMessageError = "§cYou have no one to reply to.";
+
+    public String ignoreAddedMessage = "§aYou are now ignoring §b{player}.";
+    public String ignoreRemovedMessage = "§aYou are no longer ignoring §b{player}.";
+    public String ignoredByPlayerMessage = "§cYou cannot message {target}, as they are ignoring you.";
+
+    public String notificationEnabledMessage = "§aNotification sound enabled.";
+    public String notificationDisabledMessage = "§cNotification sound disabled.";
 }
