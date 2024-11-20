@@ -30,7 +30,7 @@
 
 ## Configuration
 
-The mod allows you to customize various settings by editing the `config.json` file, such as:
+The mod allows you to customize various settings by editing the `private-messages.json` file, such as:
 - **Message formats**: Customize how private messages appear.
 - **Notification settings**: Enable or disable sound notifications for received private messages.
 - **Help messages**: Edit the text shown in the `/private-messages help` command.
