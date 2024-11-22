@@ -26,3 +26,5 @@ replay_pid*
 .github/*
 .gradle/*
 build/*
+
+.idea/*
