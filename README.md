@@ -3,38 +3,34 @@
 **Private Messages** is a Minecraft mod designed to enhance the in-game messaging system with features like private messaging, message replies, ignoring players, and notifications. This mod allows players to send direct messages to each other, reply to the last received message, and manage privacy with an ignore list.
 
 ## Features
-- **Send Private Messages**: Use `/pm`, `/m`, `/t`, `/msg`, `/tell` commands to send private messages to other players.
+- **Send Private Messages**: Use `/m`, `/t`, `/msg`, `/tell` commands to send private messages to other players.
 - **Reply to Last Message**: Quickly reply to the last received private message using `/reply` or `/r`.
 - **Reply by Clicking**: You can also reply to a private message simply by clicking on it! Clicking on the message will automatically suggest the reply command with the sender’s name.
 - **Ignore Players**: Block messages from specific players using the `/ignore` command.
-- **Notification Settings**: Enable or disable notification sounds for private messages using `/private-messages notification [on|off]`.
-- **Help Command**: Displays a list of commands and their usage with `/private-messages help`.
+- **Notification Settings**: Enable or disable notification sounds for private messages using `/pm notification [on|off]`.
+- **Help Command**: Displays a list of commands and their usage with `/pm help`.
 - **Configurable Settings**: Customize message formats, notification settings, and more through the configuration file.
-
-## Installation
-1. Download the mod from the [releases page](https://github.com/Son1kXDev/private-messages/releases) or clone the repository.
-2. Place the mod's `.jar` file into your Minecraft mods folder.
-3. Make sure you have [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api) installed.
 
 ## Commands
 
-- `/pm <player> <message>`: Send a private message to another player.
-- `/t <player> <message>`: Send a private message (alias for `/pm`).
-- `/msg <player> <message>`: Send a private message (alias for `/pm`).
-- `/w <player> <message>`: Send a private message (alias for `/pm`).
+- `/tell <player> <message>`: Send a private message.
+- `/t <player> <message>`: Send a private message (alias for `/tell`).
+- `/msg <player> <message>`: Send a private message.
+- `/m <player> <message>`: Send a private message (alias for `/msg`).
+- `/w <player> <message>`: Send a private message.
 - `/reply <message>`: Reply to the last received private message.
 - `/r <message>`: Reply to the last received private message (alias for `/reply`).
 - `/ignore <player>`: Toggle ignoring a player. You will no longer receive private messages from them.
-- `/private-messages notification [on|off]`: Toggle sound notifications for private messages.
-- `/private-messages help`: Show a list of all commands and their usage.
-- `/private-messages reload`: Reload the mod's configuration.
+- `/pm notification [on|off]`: Toggle sound notifications for private messages.
+- `/pm help`: Show a list of all commands and their usage.
+- `/pm reload`: Reload the mod's configuration.
 
 ## Configuration
 
 The mod allows you to customize various settings by editing the `private-messages.json` file, such as:
 - **Message formats**: Customize how private messages appear.
 - **Notification settings**: Enable or disable sound notifications for received private messages.
-- **Help messages**: Edit the text shown in the `/private-messages help` command.
+- **Help messages**: Edit the text shown in the `/pm help` command.
 
 ### Example Configuration
 ```json
@@ -52,9 +48,9 @@ The mod allows you to customize various settings by editing the `private-message
   "notificationEnabledMessage": "§aNotification sound enabled.",
   "notificationDisabledMessage": "§cNotification sound disabled.",
   "helpMessages": [
-    "§6/private-messages help §f- Show this help message",
-    "§6/private-messages notification [on/off] §f- Enable or disable notification sounds",
-    "§6/pm <player> <message> §f- Send a private message",
+    "§6/pm help §f- Show this help message",
+    "§6/pm notification [on/off] §f- Enable or disable notification sounds",
+    "§6/msg <player> <message> §f- Send a private message",
     "§6/reply <message> §f- Reply to the last received message",
     "§6/ignore <player> §f- Ignore or unignore a player"
   ]
