@@ -39,7 +39,7 @@ public class MessageHandler {
                             .replace("{sender}", source.getName())
                             .replace("{message}", message))
                     .styled(style -> style
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/pm " + source.getName() + " "))
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
                             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(config.clickToReplyHoverText)))
                             .withColor(Formatting.YELLOW)
                     );
