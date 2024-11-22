@@ -1,4 +1,4 @@
-﻿package com.enjine.privatemessages;
+package com.enjine.privatemessages;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.CommandDispatcher;

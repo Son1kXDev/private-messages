@@ -1,4 +1,4 @@
-﻿package com.enjine.privatemessages;
+package com.enjine.privatemessages;
 
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;

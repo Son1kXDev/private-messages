@@ -1,11 +1,8 @@
-﻿package com.enjine.privatemessages;
-
+package com.enjine.privatemessages;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.HashSet;
 import java.util.Set;
-
 import static com.enjine.privatemessages.PrivateMessages.ignoredPlayers;
 import static com.enjine.privatemessages.PrivateMessages.notificationSettings;
 

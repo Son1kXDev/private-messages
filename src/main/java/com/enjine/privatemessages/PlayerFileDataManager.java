@@ -1,4 +1,4 @@
-﻿package com.enjine.privatemessages;
+package com.enjine.privatemessages;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

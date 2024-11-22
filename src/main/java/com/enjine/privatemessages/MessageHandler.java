@@ -1,4 +1,4 @@
-﻿package com.enjine.privatemessages;
+package com.enjine.privatemessages;
 
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
