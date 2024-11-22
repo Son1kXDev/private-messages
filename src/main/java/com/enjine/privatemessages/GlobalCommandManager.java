@@ -20,7 +20,6 @@ import static com.enjine.privatemessages.PrivateMessages.config;
 public class GlobalCommandManager {
     public static void registerCommands() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            registerMessageCommand(dispatcher, "pm");
             registerMessageCommand(dispatcher, "t");
             registerMessageCommand(dispatcher, "m");
 
@@ -101,7 +100,7 @@ public class GlobalCommandManager {
 
     private static void registerNotificationCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-                CommandManager.literal("private-messages")
+                CommandManager.literal("pm")
                         .then(CommandManager.literal("notification")
                                 .then(CommandManager.literal("on")
                                         .executes(context -> setNotification(context.getSource().getPlayer(), true, context.getSource()))
@@ -115,7 +114,7 @@ public class GlobalCommandManager {
 
     private static void registerHelpCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-                CommandManager.literal("private-messages")
+                CommandManager.literal("pm")
                         .then(CommandManager.literal("help")
                                 .executes(context -> {
                                     ServerCommandSource source = context.getSource();
@@ -131,10 +130,11 @@ public class GlobalCommandManager {
 
     private static void registerReloadCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-                CommandManager.literal("private-messages")
+                CommandManager.literal("pm")
                         .then(CommandManager.literal("reload")
+                                .requires((source) -> source.hasPermissionLevel(4))
                                 .executes(context -> {
-                                    config = ConfigManager.loadConfig();
+                                    PrivateMessages.config = ConfigManager.loadConfig();
                                     context.getSource().sendFeedback(() -> Text.literal("Configuration reloaded."), false);
                                     return 1; // Success
                                 })

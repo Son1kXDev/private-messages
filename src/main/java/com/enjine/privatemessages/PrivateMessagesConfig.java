@@ -20,8 +20,8 @@ public class PrivateMessagesConfig {
     public String notificationDisabledMessage = "§cNotification sound disabled.";
 
     public String[] helpMessages = new String[] {
-        "§6/private-messages help §f- Show this help message",
-        "§6/private-messages notification [on/off] §f- Enable or disable notification sounds",
+        "§6/pm help §f- Show this help message",
+        "§6/pm notification [on/off] §f- Enable or disable notification sounds",
         "§6/pm <player> <message> §f- Send a private message",
         "§6/reply <message> §f- Reply to the last received message",
         "§6/ignore <player> §f- Ignore or unignore a player"
