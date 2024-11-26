@@ -1,28 +1,28 @@
 package com.enjine.privatemessages;
+
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
+
 import java.util.HashSet;
 import java.util.Set;
-import static com.enjine.privatemessages.PrivateMessages.ignoredPlayers;
-import static com.enjine.privatemessages.PrivateMessages.notificationSettings;
+import java.util.UUID;
 
 public class EventManager {
     public static void registerEvents() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
-            PlayerFileDataManager.PlayerData data = PlayerFileDataManager.loadPlayerData(player);
-            ignoredPlayers.put(player, convertNamesToPlayers(data.ignoredPlayers, player));
-            notificationSettings.put(player, data.notificationEnabled);
+            UUID playerUUID = player.getUuid();
+            PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
+
+            System.out.println("Loaded data for " + player.getEntityName() + ": " + data.ignoredPlayers);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            ServerPlayerEntity player = handler.player;
-            PlayerFileDataManager.PlayerData data = new PlayerFileDataManager.PlayerData();
-            data.ignoredPlayers = convertPlayersToNames(ignoredPlayers.getOrDefault(player, new HashSet<>()));
-            data.notificationEnabled = notificationSettings.getOrDefault(player, true);
-
-            PlayerFileDataManager.savePlayerData(player, data);
+            ServerPlayerEntity player = handler.getPlayer();
+            UUID playerUUID = player.getUuid();
+            PlayerDataManager.unloadPlayerData(playerUUID);
         });
+
     }
 
     private static Set<ServerPlayerEntity> convertNamesToPlayers(Set<String> playerNames, ServerPlayerEntity currentPlayer) {

@@ -1,17 +1,16 @@
 package com.enjine.privatemessages;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.CommandDispatcher;
-
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-
-import java.util.Set;
 
 import static com.enjine.privatemessages.MessageHandler.replyToLastMessage;
 import static com.enjine.privatemessages.MessageHandler.sendPrivateMessage;
@@ -143,26 +142,30 @@ public class GlobalCommandManager {
     }
 
     private static int toggleIgnorePlayer(ServerPlayerEntity sender, ServerPlayerEntity target, ServerCommandSource source) {
-        Set<String> ignoredPlayers = PlayerDataManager.getIgnoredPlayers(sender);
+        PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
 
-        if (ignoredPlayers.contains(target.getEntityName())) {
-            ignoredPlayers.remove(target.getEntityName());
+        if (senderData.ignoredPlayers.contains(target.getUuid())) {
+            senderData.ignoredPlayers.remove(target.getUuid());
             source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getEntityName())), false);
         } else {
-            ignoredPlayers.add(target.getEntityName());
+            senderData.ignoredPlayers.add(target.getUuid());
             source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getEntityName())), false);
         }
 
-        PlayerDataManager.setIgnoredPlayers(sender, ignoredPlayers);
+        PlayerDataManager.savePlayerData(sender.getUuid());
         return 1; // Success
     }
 
     private static int setNotification(ServerPlayerEntity player, boolean enabled, ServerCommandSource source) {
-        PlayerDataManager.setNotificationSetting(player, enabled);
+        PlayerDataManager.PlayerData playerData = PlayerDataManager.getPlayerData(player.getUuid());
+        playerData.notificationEnabled = enabled;
+        PlayerDataManager.savePlayerData(player.getUuid());
 
-        String message = enabled
-                ? config.notificationEnabledMessage
-                : config.notificationDisabledMessage;
+        String message = enabled ? config.notificationEnabledMessage : config.notificationDisabledMessage;
+
+        player.playSound(
+                enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
+                SoundCategory.PLAYERS, 1.0F, 1.0F);
 
         source.sendFeedback(() -> Text.literal(message), false);
         return 1; // Success
