@@ -1,33 +1,59 @@
 package com.enjine.privatemessages;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.server.network.ServerPlayerEntity;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 public class PlayerDataManager {
-    public static Set<String> getIgnoredPlayers(ServerPlayerEntity player) {
-        PlayerFileDataManager.PlayerData data = PlayerFileDataManager.loadPlayerData(player);
-        return data.ignoredPlayers;
+    private static final File DATA_DIR = new File("world/playerdata/pm");
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
+
+    public static void initialize() {
+        if (!DATA_DIR.exists()) {
+            DATA_DIR.mkdirs();
+        }
     }
 
-    public static void setIgnoredPlayers(ServerPlayerEntity player, Set<String> ignoredPlayers) {
-        PlayerFileDataManager.PlayerData data = PlayerFileDataManager.loadPlayerData(player);
-        data.ignoredPlayers = ignoredPlayers;
-        PlayerFileDataManager.savePlayerData(player, data);
+    public static PlayerData getPlayerData(UUID playerUUID) {
+        return playerDataMap.computeIfAbsent(playerUUID, uuid -> {
+            File file = new File(DATA_DIR, uuid + ".json");
+            if (file.exists()) {
+                try (FileReader reader = new FileReader(file)) {
+                    return GSON.fromJson(reader, PlayerData.class);
+                } catch (IOException e) {
+                    e.fillInStackTrace();
+                }
+            }
+            return new PlayerData();
+        });
     }
 
-    public static boolean getNotificationSetting(ServerPlayerEntity player) {
-        PlayerFileDataManager.PlayerData data = PlayerFileDataManager.loadPlayerData(player);
-        return data.notificationEnabled;
+    public static void savePlayerData(UUID playerUUID) {
+        PlayerData data = playerDataMap.get(playerUUID);
+        if (data != null) {
+            File file = new File(DATA_DIR, playerUUID + ".json");
+            try (FileWriter writer = new FileWriter(file)) {
+                GSON.toJson(data, writer);
+            } catch (IOException e) {
+                e.fillInStackTrace();
+            }
+        }
     }
 
-    public static void setNotificationSetting(ServerPlayerEntity player, boolean enabled) {
-        PlayerFileDataManager.PlayerData data = PlayerFileDataManager.loadPlayerData(player);
-        data.notificationEnabled = enabled;
-        PlayerFileDataManager.savePlayerData(player, data);
+    public static void unloadPlayerData(UUID playerUUID) {
+        savePlayerData(playerUUID);
+        playerDataMap.remove(playerUUID);
+    }
+
+    public static class PlayerData {
+        public Set<UUID> ignoredPlayers = new HashSet<>();
+        public boolean notificationEnabled = true;
     }
 }
+
