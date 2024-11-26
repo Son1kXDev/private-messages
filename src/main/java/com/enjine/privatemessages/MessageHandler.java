@@ -9,32 +9,31 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static com.enjine.privatemessages.PrivateMessages.*;
+import static com.enjine.privatemessages.PrivateMessages.config;
+import static com.enjine.privatemessages.PrivateMessages.lastMessageSender;
 
 public class MessageHandler {
 
     public static int sendPrivateMessage(ServerCommandSource source, String targetName, String message) {
         ServerPlayerEntity sender = source.getPlayer();
-        ServerPlayerEntity targetPlayer = source.getServer().getPlayerManager().getPlayer(targetName);
+        ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(targetName);
 
-        if (targetPlayer != null) {
+        if (target != null) {
 
-            Set<ServerPlayerEntity> ignoredSet = ignoredPlayers.getOrDefault(targetPlayer, new HashSet<>());
-            if (ignoredSet.contains(sender)) {
+            PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
+            PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
+
+            if (senderData.ignoredPlayers.contains(target.getUuid())) {
                 sender.sendMessage(Text.literal(config.cannotSendToIgnoredPlayerMessage.replace("{player}", targetName)), false);
                 return 0; // Blocked
             }
 
-            Set<ServerPlayerEntity> senderIgnoredSet = ignoredPlayers.getOrDefault(sender, new HashSet<>());
-            if (senderIgnoredSet.contains(targetPlayer)) {
+            if (targetData.ignoredPlayers.contains(sender.getUuid())) {
                 sender.sendMessage(Text.literal(config.ignoredByPlayerMessage.replace("{player}", targetName)), false);
                 return 0; // Blocked
             }
 
-            lastMessageSender.put(targetPlayer, source.getPlayer());
+            lastMessageSender.put(target, source.getPlayer());
             Text receiveMessage = Text.literal(config.receiveMessageFormat
                             .replace("{sender}", source.getName())
                             .replace("{message}", message))
@@ -47,12 +46,11 @@ public class MessageHandler {
                     .replace("{target}", targetName)
                     .replace("{message}", message);
 
-            targetPlayer.sendMessage(receiveMessage, false);
+            target.sendMessage(receiveMessage, false);
             source.sendMessage(Text.literal(sendMessage));
 
-            // Play sound to target player
-            if (notificationSettings.getOrDefault(targetPlayer, true)) {
-                targetPlayer.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            if (targetData.notificationEnabled) {
+                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1; // Success
@@ -67,6 +65,8 @@ public class MessageHandler {
         ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity lastSender = lastMessageSender.get(sender);
 
+        PlayerDataManager.PlayerData lastSenderData = PlayerDataManager.getPlayerData(lastSender.getUuid());
+
         if (lastSender != null) {
             String receiveMessage = config.receiveMessageFormat
                     .replace("{sender}", sender.getName().getString())
@@ -78,9 +78,8 @@ public class MessageHandler {
             lastSender.sendMessage(Text.literal(receiveMessage), false);
             source.sendMessage(Text.literal(sendMessage));
 
-            // Play sound to the last sender
-            if (notificationSettings.getOrDefault(lastSender, true)) {
-                lastSender.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            if (lastSenderData.notificationEnabled) {
+                lastSender.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1; // Success

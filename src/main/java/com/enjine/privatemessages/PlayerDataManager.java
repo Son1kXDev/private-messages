@@ -1,49 +1,59 @@
 package com.enjine.privatemessages;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.server.network.ServerPlayerEntity;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 public class PlayerDataManager {
-    private static final String IGNORED_PLAYERS_KEY = "ignoredPlayers";
-    private static final String NOTIFICATION_SETTINGS_KEY = "notificationSettings";
+    private static final File DATA_DIR = new File("world/playerdata/pm");
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
-    public static Set<String> getIgnoredPlayers(ServerPlayerEntity player) {
-        NbtCompound playerData = player.getCommandSource().getPlayer().writeNbt(new NbtCompound());
-        if (!playerData.contains(IGNORED_PLAYERS_KEY)) {
-            return new HashSet<>();
+    public static void initialize() {
+        if (!DATA_DIR.exists()) {
+            DATA_DIR.mkdirs();
         }
-
-        NbtList ignoredList = playerData.getList(IGNORED_PLAYERS_KEY, 8); // 8 — это тип String
-        Set<String> ignoredPlayers = new HashSet<>();
-        for (int i = 0; i < ignoredList.size(); i++) {
-            ignoredPlayers.add(ignoredList.getString(i));
-        }
-        return ignoredPlayers;
     }
 
-    public static void setIgnoredPlayers(ServerPlayerEntity player, Set<String> ignoredPlayers) {
-        NbtCompound playerData = player.writeNbt(new NbtCompound());
-        NbtList ignoredList = new NbtList();
-        for (String ignoredPlayer : ignoredPlayers) {
-            ignoredList.add(NbtString.of(ignoredPlayer));
+    public static PlayerData getPlayerData(UUID playerUUID) {
+        return playerDataMap.computeIfAbsent(playerUUID, uuid -> {
+            File file = new File(DATA_DIR, uuid + ".json");
+            if (file.exists()) {
+                try (FileReader reader = new FileReader(file)) {
+                    return GSON.fromJson(reader, PlayerData.class);
+                } catch (IOException e) {
+                    e.fillInStackTrace();
+                }
+            }
+            return new PlayerData();
+        });
+    }
+
+    public static void savePlayerData(UUID playerUUID) {
+        PlayerData data = playerDataMap.get(playerUUID);
+        if (data != null) {
+            File file = new File(DATA_DIR, playerUUID + ".json");
+            try (FileWriter writer = new FileWriter(file)) {
+                GSON.toJson(data, writer);
+            } catch (IOException e) {
+                e.fillInStackTrace();
+            }
         }
-        playerData.put(IGNORED_PLAYERS_KEY, ignoredList);
-        player.readNbt(playerData); // Применяем изменения
     }
 
-    public static boolean getNotificationSetting(ServerPlayerEntity player) {
-        NbtCompound playerData = player.writeNbt(new NbtCompound());
-        return playerData.getBoolean(NOTIFICATION_SETTINGS_KEY);
+    public static void unloadPlayerData(UUID playerUUID) {
+        savePlayerData(playerUUID);
+        playerDataMap.remove(playerUUID);
     }
 
-    public static void setNotificationSetting(ServerPlayerEntity player, boolean enabled) {
-        NbtCompound playerData = player.writeNbt(new NbtCompound());
-        playerData.putBoolean(NOTIFICATION_SETTINGS_KEY, enabled);
-        player.readNbt(playerData); // Применяем изменения
+    public static class PlayerData {
+        public Set<UUID> ignoredPlayers = new HashSet<>();
+        public boolean notificationEnabled = true;
     }
 }
+
