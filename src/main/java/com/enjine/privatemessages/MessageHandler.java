@@ -50,7 +50,7 @@ public class MessageHandler {
             source.sendMessage(Text.literal(sendMessage));
 
             if (targetData.notificationEnabled) {
-                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                target.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1; // Success
@@ -79,7 +79,7 @@ public class MessageHandler {
             source.sendMessage(Text.literal(sendMessage));
 
             if (lastSenderData.notificationEnabled) {
-                lastSender.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                lastSender.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1; // Success
