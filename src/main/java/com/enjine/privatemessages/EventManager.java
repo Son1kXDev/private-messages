@@ -14,7 +14,7 @@ public class EventManager {
             UUID playerUUID = player.getUuid();
             PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
 
-            System.out.println("Loaded data for " + player.getEntityName() + ": " + data.ignoredPlayers);
+            System.out.println("Loaded data for " + player.getNameForScoreboard() + ": " + data.ignoredPlayers);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -39,7 +39,7 @@ public class EventManager {
     private static Set<String> convertPlayersToNames(Set<ServerPlayerEntity> players) {
         Set<String> names = new HashSet<>();
         for (ServerPlayerEntity player : players) {
-            names.add(player.getEntityName());
+            names.add(player.getNameForScoreboard());
         }
         return names;
     }
