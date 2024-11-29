@@ -45,7 +45,7 @@ public class GlobalCommandManager {
                                         .executes(context -> {
                                             ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
                                             String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                                            return sendPrivateMessage(context.getSource(), player.getNameForScoreboard(), message);
                                         })
                                 )
                         )
@@ -64,7 +64,7 @@ public class GlobalCommandManager {
                                         .executes(context -> {
                                             ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
                                             String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                                            return sendPrivateMessage(context.getSource(), player.getNameForScoreboard(), message);
                                         })
                                 )
                         )
@@ -146,10 +146,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getNameForScoreboard())), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getNameForScoreboard())), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -163,7 +163,7 @@ public class GlobalCommandManager {
 
         String message = enabled ? config.notificationEnabledMessage : config.notificationDisabledMessage;
 
-        player.playSound(
+        player.playSoundToPlayer(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
                 SoundCategory.PLAYERS, 1.0F, 1.0F);
 
