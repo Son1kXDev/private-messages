@@ -74,6 +74,23 @@ public class MessageHandler {
         }
     }
 
+    public static int readOfflineMessages(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player != null) {
+            UUID playerUUID = player.getUuid();
+            PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
+            for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
+                Text message = Text.literal(config.offlineMessageFormat
+                        .replace("{sender}", msg.sender)
+                        .replace("{message}", msg.message));
+                player.sendMessage(message, false);
+            }
+            data.offlineMessages.clear();
+            PlayerDataManager.savePlayerData(playerUUID);
+            return 1;
+        } else return 0;
+    }
+
     public static int replyToLastMessage(ServerCommandSource source, String message) {
         ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity lastSender = lastMessageSender.get(sender);

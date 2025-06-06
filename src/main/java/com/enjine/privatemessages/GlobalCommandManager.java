@@ -12,8 +12,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
-import static com.enjine.privatemessages.MessageHandler.replyToLastMessage;
-import static com.enjine.privatemessages.MessageHandler.sendPrivateMessage;
+import static com.enjine.privatemessages.MessageHandler.*;
 import static com.enjine.privatemessages.PrivateMessages.config;
 
 public class GlobalCommandManager {
@@ -29,6 +28,7 @@ public class GlobalCommandManager {
             registerReplyCommand(dispatcher, "reply");
             registerReplyCommand(dispatcher, "r");
 
+            registerReadOfflineCommand(dispatcher, "read");
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
 
@@ -37,10 +37,20 @@ public class GlobalCommandManager {
         });
     }
 
+    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> readOfflineMessages(context.getSource()))
+                )
+        );
+    }
+
     private static void registerMessageCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
         dispatcher.register(
                 CommandManager.literal(commandName)
-                        .then(CommandManager.argument("player", EntityArgumentType.player())
+                        .then(CommandManager.argument("player", StringArgumentType.word())
+                                .suggests(SuggestionProviders.OFFLINE_PLAYER_SUGGESTIONS)
                                 .then(CommandManager.argument("message", StringArgumentType.greedyString())
                                         .executes(context -> {
                                             ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
@@ -57,18 +67,7 @@ public class GlobalCommandManager {
         if (node != null) {
             dispatcher.getRoot().getChildren().remove(node);
         }
-        dispatcher.register(
-                CommandManager.literal(commandName)
-                        .then(CommandManager.argument("player", EntityArgumentType.player())
-                                .then(CommandManager.argument("message", StringArgumentType.greedyString())
-                                        .executes(context -> {
-                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
-                                            String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
-                                        })
-                                )
-                        )
-        );
+        registerMessageCommand(dispatcher, commandName);
     }
 
     private static void registerReplyCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {

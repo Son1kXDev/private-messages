@@ -2,7 +2,12 @@ package com.enjine.privatemessages;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
@@ -21,15 +26,14 @@ public class EventManager {
 
             if (!data.offlineMessages.isEmpty()) {
                 player.sendMessage(Text.literal(config.offlineMessageTitle
-                        .replace("{amount}", String.valueOf(data.offlineMessages.size()))));
-                for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
-                    Text message = Text.literal(config.offlineMessageFormat
-                            .replace("{sender}", msg.sender)
-                            .replace("{message}", msg.message));
-                    player.sendMessage(message, false);
+                        .replace("{amount}", String.valueOf(data.offlineMessages.size()))).styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm read"))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(config.offlineMessageHover)))
+                        .withColor(Formatting.YELLOW)
+                ));
+                if (data.notificationEnabled) {
+                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
-                data.offlineMessages.clear();
-                PlayerDataManager.savePlayerData(playerUUID);
             }
 
             System.out.println("Loaded data for " + player.getEntityName() + ": " + data.ignoredPlayers);
