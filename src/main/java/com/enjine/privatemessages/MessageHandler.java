@@ -9,6 +9,8 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.UUID;
+
 import static com.enjine.privatemessages.PrivateMessages.config;
 import static com.enjine.privatemessages.PrivateMessages.lastMessageSender;
 
@@ -55,9 +57,20 @@ public class MessageHandler {
 
             return 1; // Success
         } else {
-            String playerNotFoundMessage = config.playerNotFoundMessage.replace("{target}", targetName);
-            source.sendError(Text.literal(playerNotFoundMessage));
-            return 0; // Error
+            UUID targetUUID = PlayerDataManager.getUUIDByName(targetName);
+            if (targetUUID != null) {
+                PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(targetUUID);
+                data.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
+                PlayerDataManager.savePlayerData(targetUUID);
+                PlayerDataManager.unloadPlayerData(targetUUID);
+                String playerOfflineMessage = config.playerOfflineMessage.replace("{target}", targetName);
+                sender.sendMessage(Text.literal(playerOfflineMessage));
+                return 1; // Success
+            } else {
+                String playerNotFoundMessage = config.playerNotFoundMessage.replace("{target}", targetName);
+                source.sendError(Text.literal(playerNotFoundMessage));
+                return 0; // Error
+            }
         }
     }
 

@@ -1,11 +1,12 @@
 package com.enjine.privatemessages;
 
 public class PrivateMessagesConfig {
-    public String messageFormat = "§6[PM] §a{sender}§r: §f{message}";
-
     public String sendMessageFormat = "§6[PM -> §b{target}§6]: §f{message}";
     public String receiveMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
+    public String offlineMessageTitle = "§6You have {amount} unread messages:";
+    public String offlineMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
 
+    public String playerOfflineMessage = "§cPlayer {target} offline. He will receive your message when log in.";
     public String playerNotFoundMessage = "§cPlayer {target} not found.";
     public String noLastMessageError = "§cYou have no one to reply to.";
 
@@ -19,11 +20,11 @@ public class PrivateMessagesConfig {
     public String notificationEnabledMessage = "§aNotification sound enabled.";
     public String notificationDisabledMessage = "§cNotification sound disabled.";
 
-    public String[] helpMessages = new String[] {
-        "§6/pm help §f- Show this help message",
-        "§6/pm notification [on/off] §f- Enable or disable notification sounds",
-        "§6/msg <player> <message> §f- Send a private message",
-        "§6/reply <message> §f- Reply to the last received message",
-        "§6/ignore <player> §f- Ignore or unignore a player"
+    public String[] helpMessages = new String[]{
+            "§6/pm help §f- Show this help message",
+            "§6/pm notification [on/off] §f- Enable or disable notification sounds",
+            "§6/msg <player> <message> §f- Send a private message",
+            "§6/reply <message> §f- Reply to the last received message",
+            "§6/ignore <player> §f- Ignore or unignore a player"
     };
 }

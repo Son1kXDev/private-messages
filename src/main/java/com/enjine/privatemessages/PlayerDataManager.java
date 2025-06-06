@@ -46,6 +46,44 @@ public class PlayerDataManager {
         }
     }
 
+    public static Set<String> getAllKnownPlayerNames() {
+        Set<String> names = new HashSet<>();
+        File[] files = DATA_DIR.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files != null) {
+            for (File file : files) {
+                String uuidStr = file.getName().replace(".json", "");
+                try {
+                    UUID uuid = UUID.fromString(uuidStr);
+                    PlayerData data = getPlayerData(uuid);
+                    if (data.name != null) {
+                        names.add(data.name);
+                    }
+                } catch (IllegalArgumentException e) {
+                    e.fillInStackTrace();
+                }
+            }
+        }
+        return names;
+    }
+
+    public static UUID getUUIDByName(String name) {
+        File[] files = DATA_DIR.listFiles((dir, fname) -> fname.endsWith(".json"));
+        if (files != null) {
+            for (File file : files) {
+                try {
+                    UUID uuid = UUID.fromString(file.getName().replace(".json", ""));
+                    PlayerData data = getPlayerData(uuid);
+                    if (data.name != null && data.name.equalsIgnoreCase(name)) {
+                        return uuid;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+
     public static void unloadPlayerData(UUID playerUUID) {
         savePlayerData(playerUUID);
         playerDataMap.remove(playerUUID);
@@ -54,6 +92,21 @@ public class PlayerDataManager {
     public static class PlayerData {
         public Set<UUID> ignoredPlayers = new HashSet<>();
         public boolean notificationEnabled = true;
+        public String name = "";
+        public List<OfflineMessage> offlineMessages;
+    }
+
+    public static class OfflineMessage {
+        public String sender = "";
+        public String message = "";
+
+        public OfflineMessage(String sender, String message) {
+            this.sender = sender;
+            this.message = message;
+        }
+
+        public OfflineMessage() {
+        }
     }
 }
 
