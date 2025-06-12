@@ -19,10 +19,10 @@ public class MessageHandler {
     public static int sendPrivateMessage(ServerCommandSource source, String targetName, String message) {
         ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(targetName);
+        PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
 
         if (target != null) {
 
-            PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
             PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
 
             if (senderData.ignoredPlayers.contains(target.getUuid())) {
@@ -58,9 +58,23 @@ public class MessageHandler {
             return 1; // Success
         } else {
             UUID targetUUID = PlayerDataManager.getUUIDByName(targetName);
+
             if (targetUUID != null) {
-                PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(targetUUID);
-                data.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
+                
+                PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
+
+                if (senderData.ignoredPlayers.contains(target.getUuid())) {
+                    sender.sendMessage(Text.literal(config.cannotSendToIgnoredPlayerMessage.replace("{player}", targetName)), false);
+                    return 0; // Blocked
+                }
+
+                if (targetData.ignoredPlayers.contains(sender.getUuid())) {
+                    sender.sendMessage(Text.literal(config.ignoredByPlayerMessage.replace("{player}", targetName)), false);
+                    return 0; // Blocked
+                }
+
+
+                targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
                 PlayerDataManager.savePlayerData(targetUUID);
                 PlayerDataManager.unloadPlayerData(targetUUID);
                 String playerOfflineMessage = config.playerOfflineMessage.replace("{target}", targetName);
@@ -79,6 +93,9 @@ public class MessageHandler {
         if (player != null) {
             UUID playerUUID = player.getUuid();
             PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
+            if (data.offlineMessages.isEmpty()) {
+                player.sendMessage(Text.of(config.noOfflineMessages), false);
+            }
             for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
                 Text message = Text.literal(config.offlineMessageFormat
                         .replace("{sender}", msg.sender)

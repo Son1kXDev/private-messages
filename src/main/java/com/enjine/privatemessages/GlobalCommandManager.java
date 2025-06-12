@@ -53,9 +53,9 @@ public class GlobalCommandManager {
                                 .suggests(SuggestionProviders.OFFLINE_PLAYER_SUGGESTIONS)
                                 .then(CommandManager.argument("message", StringArgumentType.greedyString())
                                         .executes(context -> {
-                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+                                            String targetName = StringArgumentType.getString(context, "player");
                                             String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                                            return sendPrivateMessage(context.getSource(), targetName, message);
                                         })
                                 )
                         )

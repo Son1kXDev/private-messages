@@ -93,7 +93,7 @@ public class PlayerDataManager {
         public Set<UUID> ignoredPlayers = new HashSet<>();
         public boolean notificationEnabled = true;
         public String name = "";
-        public List<OfflineMessage> offlineMessages;
+        public List<OfflineMessage> offlineMessages = new ArrayList<OfflineMessage>();
     }
 
     public static class OfflineMessage {

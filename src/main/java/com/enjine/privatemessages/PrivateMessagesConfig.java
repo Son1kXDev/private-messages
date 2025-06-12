@@ -4,6 +4,7 @@ public class PrivateMessagesConfig {
     public String sendMessageFormat = "§6[PM -> §b{target}§6]: §f{message}";
     public String receiveMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
     public String offlineMessageTitle = "§6You have {amount} unread messages. Use §f/pm read";
+    public String noOfflineMessages = "§6You dont have unread messages";
     public String offlineMessageHover = "§eClick to read";
     public String offlineMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
 
