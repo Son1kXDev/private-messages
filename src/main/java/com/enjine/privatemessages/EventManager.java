@@ -6,7 +6,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -37,14 +36,14 @@ public class EventManager {
                 }
             }
 
-            LOGGER.info("[PM] Player data loaded for {}", player.getEntityName());
+            LOGGER.info("[PM] Player data loaded for {}", player.getNameForScoreboard());
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             UUID playerUUID = player.getUuid();
             PlayerDataManager.unloadPlayerData(playerUUID);
-            LOGGER.info("[PM] Player data unloaded for {}", player.getEntityName());
+            LOGGER.info("[PM] Player data unloaded for {}", player.getNameForScoreboard());
         });
 
     }
