@@ -25,11 +25,12 @@ public class EventManager {
             }
 
             if (!data.offlineMessages.isEmpty()) {
-                player.sendMessage(Text.of(Text.translatable("private-messages.offlineMessageTitle", data.offlineMessages.size()).styled(style -> style
+                var translated = Text.literal(Text.translatable("private-messages.hasOfflineMessages", data.offlineMessages.size()).getString());
+                player.sendMessage(translated.styled(style -> style
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm read"))
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.offlineMessageHover").getString())))
                         .withColor(Formatting.YELLOW)
-                ).getString()));
+                ));
                 if (data.notificationEnabled) {
                     player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }

@@ -26,12 +26,12 @@ public class MessageHandler {
             PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
 
             if (senderData.ignoredPlayers.contains(target.getUuid())) {
-                sender.sendMessage(Text.of(Text.translatable("private-messages.cannotSendToIgnoredPlayerMessage", targetName).getString()), false);
+                sender.sendMessage(Text.of(Text.translatable("private-messages.ignoringPlayer", targetName).getString()), false);
                 return 0; // Blocked
             }
 
             if (targetData.ignoredPlayers.contains(sender.getUuid())) {
-                sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayerMessage", targetName).getString()), false);
+                sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayer", targetName).getString()), false);
                 return 0; // Blocked
             }
 
@@ -41,7 +41,7 @@ public class MessageHandler {
                             .replace("{message}", message))
                     .styled(style -> style
                             .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHoverText").getString())))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHover").getString())))
                             .withColor(Formatting.YELLOW)
                     );
             String sendMessage = config.sendMessageFormat
@@ -63,20 +63,20 @@ public class MessageHandler {
 
                 PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
                 if (senderData.ignoredPlayers.contains(targetUUID)) {
-                    sender.sendMessage(Text.of(Text.translatable("private-messages.cannotSendToIgnoredPlayerMessage", targetName).getString()), false);
+                    sender.sendMessage(Text.of(Text.translatable("private-messages.ignoringPlayer", targetName).getString()), false);
                     return 0; // Blocked
                 }
                 if (targetData.ignoredPlayers.contains(sender.getUuid())) {
-                    sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayerMessage", targetName).getString()), false);
+                    sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayer", targetName).getString()), false);
                     return 0; // Blocked
                 }
                 targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
                 PlayerDataManager.savePlayerData(targetUUID);
                 PlayerDataManager.unloadPlayerData(targetUUID);
-                sender.sendMessage(Text.of(Text.translatable("private-messages.playerOfflineMessage", targetName).getString()));
+                sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", targetName).getString()));
                 return 1; // Success
             } else {
-                source.sendError(Text.of(Text.translatable("private-messages.playerNotFoundMessage", targetName).getString()));
+                source.sendError(Text.of(Text.translatable("private-messages.playerNotFound", targetName).getString()));
                 return 0; // Error
             }
         }
@@ -93,7 +93,11 @@ public class MessageHandler {
             for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
                 Text message = Text.literal(config.offlineMessageFormat
                         .replace("{sender}", msg.sender)
-                        .replace("{message}", msg.message));
+                        .replace("{message}", msg.message)).styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + msg.sender + " "))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHover").getString())))
+                        .withColor(Formatting.YELLOW)
+                );
                 player.sendMessage(message, false);
             }
             data.offlineMessages.clear();
@@ -105,28 +109,45 @@ public class MessageHandler {
     public static int replyToLastMessage(ServerCommandSource source, String message) {
         ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity lastSender = lastMessageSender.get(sender);
-
+        ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(lastSender.getName().getString());
         PlayerDataManager.PlayerData lastSenderData = PlayerDataManager.getPlayerData(lastSender.getUuid());
 
-        if (lastSender != null) {
+        if (target != null) {
             String receiveMessage = config.receiveMessageFormat
                     .replace("{sender}", sender.getName().getString())
                     .replace("{message}", message);
             String sendMessage = config.sendMessageFormat
-                    .replace("{target}", lastSender.getName().getString())
+                    .replace("{target}", target.getName().getString())
                     .replace("{message}", message);
 
-            lastSender.sendMessage(Text.literal(receiveMessage), false);
+            target.sendMessage(Text.literal(receiveMessage).styled(style -> style
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHover").getString())))
+                    .withColor(Formatting.YELLOW)
+            ), false);
             source.sendMessage(Text.literal(sendMessage));
 
             if (lastSenderData.notificationEnabled) {
-                lastSender.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1; // Success
         } else {
-            source.sendError(Text.of(Text.translatable("private-messages.noLastMessageError").getString()));
-            return 0; // Error
+            UUID targetUUID = PlayerDataManager.getUUIDByName(lastSender.getName().getString());
+
+            if (targetUUID != null) {
+
+                PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
+
+                targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
+                PlayerDataManager.savePlayerData(targetUUID);
+                PlayerDataManager.unloadPlayerData(targetUUID);
+                sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", lastSender.getName().getString()).getString()));
+                return 1; // Success
+            } else {
+                source.sendError(Text.of(Text.translatable("private-messages.noLastMessageError").getString()));
+                return 0; // Error
+            }
         }
     }
 }

@@ -115,7 +115,7 @@ public class GlobalCommandManager {
                         .then(CommandManager.literal("help")
                                 .executes(context -> {
                                     ServerCommandSource source = context.getSource();
-                                    String helpText = Text.translatable("private-messages.helpMessages").getString();
+                                    String helpText = Text.translatable("private-messages.help").getString();
                                     for (String line : helpText.split("\n")) {
                                         source.sendMessage(Text.literal(line));
                                     }
@@ -145,10 +145,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreRemovedMessage", target.getEntityName()).getString()), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreRemoved", target.getEntityName()).getString()), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreAddedMessage", target.getEntityName()).getString()), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreAdded", target.getEntityName()).getString()), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -160,7 +160,7 @@ public class GlobalCommandManager {
         playerData.notificationEnabled = enabled;
         PlayerDataManager.savePlayerData(player.getUuid());
 
-        var message = Text.of(Text.translatable(enabled ? "private-messages.notificationEnabledMessage" : "private-messages.notificationDisabledMessage").getString());
+        var message = Text.of(Text.translatable(enabled ? "private-messages.notificationEnabled" : "private-messages.notificationDisabled").getString());
 
         player.playSound(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
