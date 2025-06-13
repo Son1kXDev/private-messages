@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
 import static com.enjine.privatemessages.MessageHandler.*;
+import static com.enjine.privatemessages.PlayerHistoryManager.clear;
 
 public class GlobalCommandManager {
     public static void registerCommands() {
@@ -28,6 +29,9 @@ public class GlobalCommandManager {
             registerReplyCommand(dispatcher, "r");
 
             registerReadOfflineCommand(dispatcher, "read");
+            registerHistoryCommand(dispatcher, "history");
+            registerHistoryClearCommand(dispatcher, "clear");
+
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
 
@@ -41,6 +45,24 @@ public class GlobalCommandManager {
                 CommandManager.literal("pm").then(
                         CommandManager.literal(commandName)
                                 .executes(context -> readOfflineMessages(context.getSource()))
+                )
+        );
+    }
+
+    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> history(context.getSource()))
+                )
+        );
+    }
+
+    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> clear(context.getSource()))
                 )
         );
     }
@@ -115,10 +137,12 @@ public class GlobalCommandManager {
                         .then(CommandManager.literal("help")
                                 .executes(context -> {
                                     ServerCommandSource source = context.getSource();
+                                    source.sendMessage(Text.of("§6======================="));
                                     String helpText = Text.translatable("private-messages.help").getString();
                                     for (String line : helpText.split("\n")) {
                                         source.sendMessage(Text.literal(line));
                                     }
+                                    source.sendMessage(Text.of("§6======================="));
                                     return 1; // Success
                                 })
                         )

@@ -9,6 +9,7 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.enjine.privatemessages.PrivateMessages.config;
@@ -50,6 +51,8 @@ public class MessageHandler {
 
             target.sendMessage(receiveMessage, false);
             source.sendMessage(Text.literal(sendMessage));
+            PlayerHistoryManager.addMessage(sender.getUuid(), new PlayerDataManager.Message(source.getName(), targetName, message));
+            PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), targetName, message));
 
             if (targetData.notificationEnabled) {
                 target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
@@ -70,8 +73,11 @@ public class MessageHandler {
                     sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayer", targetName).getString()), false);
                     return 0; // Blocked
                 }
-                targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
+                PlayerDataManager.Message msg = new PlayerDataManager.Message(sender.getName().getString(), targetName, message);
+                targetData.offlineMessages.add(msg);
                 PlayerDataManager.savePlayerData(targetUUID);
+                PlayerHistoryManager.addMessage(sender.getUuid(), msg);
+                PlayerHistoryManager.addMessage(targetUUID, msg);
                 PlayerDataManager.unloadPlayerData(targetUUID);
                 sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", targetName).getString()));
                 return 1; // Success
@@ -90,7 +96,7 @@ public class MessageHandler {
             if (data.offlineMessages.isEmpty()) {
                 player.sendMessage(Text.of(Text.translatable("private-messages.noOfflineMessages").getString()), false);
             }
-            for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
+            for (PlayerDataManager.Message msg : data.offlineMessages) {
                 Text message = Text.literal(config.offlineMessageFormat
                         .replace("{sender}", msg.sender)
                         .replace("{message}", msg.message)).styled(style -> style
@@ -106,48 +112,83 @@ public class MessageHandler {
         } else return 0;
     }
 
+    public static int history(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player != null) {
+            UUID playerUUID = player.getUuid();
+            PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
+            if (data.history.isEmpty()) {
+                player.sendMessage(Text.of(Text.translatable("private-messages.noHistory").getString()), false);
+                return 1;
+            }
+            player.sendMessage(Text.of(Text.translatable("private-messages.historyTitle").getString()), false);
+            for (int i = 0; i < data.history.size(); i++) {
+                String message = config.historyMessageFormat
+                        .replace("{number}", String.valueOf(i + 1))
+                        .replace("{message}", data.history.get(i).message)
+                        .replace("{sender}", Objects.equals(data.history.get(i).sender, player.getName().getString()) ? "" : data.history.get(i).sender)
+                        .replace("{target}", Objects.equals(data.history.get(i).sender, player.getName().getString()) ? " -> " + data.history.get(i).target : "");
+
+                player.sendMessage(Text.literal(message), false);
+            }
+            PlayerDataManager.savePlayerData(playerUUID);
+            return 1;
+        } else return 0;
+    }
+
     public static int replyToLastMessage(ServerCommandSource source, String message) {
         ServerPlayerEntity sender = source.getPlayer();
         ServerPlayerEntity lastSender = lastMessageSender.get(sender);
-        ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(lastSender.getName().getString());
-        PlayerDataManager.PlayerData lastSenderData = PlayerDataManager.getPlayerData(lastSender.getUuid());
+        if (lastSender != null) {
+            ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(lastSender.getName().getString());
+            PlayerDataManager.PlayerData lastSenderData = PlayerDataManager.getPlayerData(lastSender.getUuid());
 
-        if (target != null) {
-            String receiveMessage = config.receiveMessageFormat
-                    .replace("{sender}", sender.getName().getString())
-                    .replace("{message}", message);
-            String sendMessage = config.sendMessageFormat
-                    .replace("{target}", target.getName().getString())
-                    .replace("{message}", message);
+            if (target != null) {
+                String receiveMessage = config.receiveMessageFormat
+                        .replace("{sender}", sender.getName().getString())
+                        .replace("{message}", message);
+                String sendMessage = config.sendMessageFormat
+                        .replace("{target}", target.getName().getString())
+                        .replace("{message}", message);
 
-            target.sendMessage(Text.literal(receiveMessage).styled(style -> style
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHover").getString())))
-                    .withColor(Formatting.YELLOW)
-            ), false);
-            source.sendMessage(Text.literal(sendMessage));
+                target.sendMessage(Text.literal(receiveMessage).styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHover").getString())))
+                        .withColor(Formatting.YELLOW)
+                ), false);
+                source.sendMessage(Text.literal(sendMessage));
+                PlayerHistoryManager.addMessage(sender.getUuid(), new PlayerDataManager.Message(source.getName(), target.getName().getString(), message));
+                PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), target.getName().getString(), message));
 
-            if (lastSenderData.notificationEnabled) {
-                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
-            }
+                if (lastSenderData.notificationEnabled) {
+                    target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                }
 
-            return 1; // Success
-        } else {
-            UUID targetUUID = PlayerDataManager.getUUIDByName(lastSender.getName().getString());
-
-            if (targetUUID != null) {
-
-                PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
-
-                targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
-                PlayerDataManager.savePlayerData(targetUUID);
-                PlayerDataManager.unloadPlayerData(targetUUID);
-                sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", lastSender.getName().getString()).getString()));
                 return 1; // Success
             } else {
-                source.sendError(Text.of(Text.translatable("private-messages.noLastMessageError").getString()));
-                return 0; // Error
+                UUID targetUUID = PlayerDataManager.getUUIDByName(lastSender.getName().getString());
+
+                if (targetUUID != null) {
+
+                    PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
+
+                    PlayerDataManager.Message msg = new PlayerDataManager.Message(sender.getName().getString(), targetData.name, message);
+                    targetData.offlineMessages.add(msg);
+                    PlayerDataManager.savePlayerData(targetUUID);
+                    PlayerHistoryManager.addMessage(sender.getUuid(), msg);
+                    PlayerHistoryManager.addMessage(targetUUID, msg);
+                    PlayerDataManager.unloadPlayerData(targetUUID);
+                    sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", lastSender.getName().getString()).getString()));
+                    return 1; // Success
+                } else {
+                    var e = new RuntimeException("Target UUID not found");
+                    source.sendError(Text.of(e.getMessage()));
+                    return 0; // Error
+                }
             }
+        } else {
+            source.sendError(Text.of(Text.translatable("private-messages.noLastMessageError").getString()));
+            return 0; // Error
         }
     }
 }

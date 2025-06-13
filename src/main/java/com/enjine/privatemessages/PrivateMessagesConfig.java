@@ -5,4 +5,5 @@ public class PrivateMessagesConfig {
     public String sendMessageFormat = "§6[PM -> §b{target}§6]: §f{message}";
     public String receiveMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
     public String offlineMessageFormat = "§6[PM] §a{sender}§r: §f{message}";
+    public String historyMessageFormat = "[{number}] §6[PM§b{target}§6] §a{sender}§r: §f{message}";
 }

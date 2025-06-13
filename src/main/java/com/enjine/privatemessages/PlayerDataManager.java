@@ -97,19 +97,27 @@ public class PlayerDataManager {
         public Set<UUID> ignoredPlayers = new HashSet<>();
         public boolean notificationEnabled = true;
         public String name = "";
-        public List<OfflineMessage> offlineMessages = new ArrayList<OfflineMessage>();
+        public List<Message> offlineMessages = new ArrayList<Message>();
+        public List<Message> history = new ArrayList<Message>();
     }
 
-    public static class OfflineMessage {
+    public static class Message {
         public String sender = "";
+        public String target = "";
         public String message = "";
 
-        public OfflineMessage(String sender, String message) {
+        public Message(String sender, String message) {
             this.sender = sender;
             this.message = message;
         }
 
-        public OfflineMessage() {
+        public Message(String sender, String target, String message) {
+            this.sender = sender;
+            this.target = target;
+            this.message = message;
+        }
+
+        public Message() {
         }
     }
 }
