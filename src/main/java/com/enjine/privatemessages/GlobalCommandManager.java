@@ -12,9 +12,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
-import static com.enjine.privatemessages.MessageHandler.replyToLastMessage;
-import static com.enjine.privatemessages.MessageHandler.sendPrivateMessage;
-import static com.enjine.privatemessages.PrivateMessages.config;
+import static com.enjine.privatemessages.MessageHandler.*;
+import static com.enjine.privatemessages.PlayerHistoryManager.clear;
 
 public class GlobalCommandManager {
     public static void registerCommands() {
@@ -29,6 +28,10 @@ public class GlobalCommandManager {
             registerReplyCommand(dispatcher, "reply");
             registerReplyCommand(dispatcher, "r");
 
+            registerReadOfflineCommand(dispatcher, "read");
+            registerHistoryCommand(dispatcher, "history");
+            registerHistoryClearCommand(dispatcher, "clear");
+
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
 
@@ -37,15 +40,43 @@ public class GlobalCommandManager {
         });
     }
 
+    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> readOfflineMessages(context.getSource()))
+                )
+        );
+    }
+
+    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> history(context.getSource()))
+                )
+        );
+    }
+
+    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal(commandName)
+                                .executes(context -> clear(context.getSource()))
+                )
+        );
+    }
+
     private static void registerMessageCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
         dispatcher.register(
                 CommandManager.literal(commandName)
-                        .then(CommandManager.argument("player", EntityArgumentType.player())
+                        .then(CommandManager.argument("player", StringArgumentType.word())
+                                .suggests(SuggestionProviders.OFFLINE_PLAYER_SUGGESTIONS)
                                 .then(CommandManager.argument("message", StringArgumentType.greedyString())
                                         .executes(context -> {
-                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+                                            String targetName = StringArgumentType.getString(context, "player");
                                             String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
+                                            return sendPrivateMessage(context.getSource(), targetName, message);
                                         })
                                 )
                         )
@@ -57,18 +88,7 @@ public class GlobalCommandManager {
         if (node != null) {
             dispatcher.getRoot().getChildren().remove(node);
         }
-        dispatcher.register(
-                CommandManager.literal(commandName)
-                        .then(CommandManager.argument("player", EntityArgumentType.player())
-                                .then(CommandManager.argument("message", StringArgumentType.greedyString())
-                                        .executes(context -> {
-                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
-                                            String message = StringArgumentType.getString(context, "message");
-                                            return sendPrivateMessage(context.getSource(), player.getEntityName(), message);
-                                        })
-                                )
-                        )
-        );
+        registerMessageCommand(dispatcher, commandName);
     }
 
     private static void registerReplyCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
@@ -117,9 +137,12 @@ public class GlobalCommandManager {
                         .then(CommandManager.literal("help")
                                 .executes(context -> {
                                     ServerCommandSource source = context.getSource();
-                                    for (String line : config.helpMessages) {
-                                        source.sendFeedback(() -> Text.literal(line), false);
+                                    source.sendMessage(Text.of("§6======================="));
+                                    String helpText = Text.translatable("private-messages.help").getString();
+                                    for (String line : helpText.split("\n")) {
+                                        source.sendMessage(Text.literal(line));
                                     }
+                                    source.sendMessage(Text.of("§6======================="));
                                     return 1; // Success
                                 })
                         )
@@ -134,7 +157,7 @@ public class GlobalCommandManager {
                                 .requires((source) -> source.hasPermissionLevel(4))
                                 .executes(context -> {
                                     PrivateMessages.config = ConfigManager.loadConfig();
-                                    context.getSource().sendFeedback(() -> Text.literal("Configuration reloaded."), false);
+                                    context.getSource().sendFeedback(() -> Text.of(Text.translatable("private-messages.reload").getString()), false);
                                     return 1; // Success
                                 })
                         )
@@ -146,10 +169,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreRemoved", target.getEntityName()).getString()), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreAdded", target.getEntityName()).getString()), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -161,13 +184,13 @@ public class GlobalCommandManager {
         playerData.notificationEnabled = enabled;
         PlayerDataManager.savePlayerData(player.getUuid());
 
-        String message = enabled ? config.notificationEnabledMessage : config.notificationDisabledMessage;
+        var message = Text.of(Text.translatable(enabled ? "private-messages.notificationEnabled" : "private-messages.notificationDisabled").getString());
 
         player.playSound(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
                 SoundCategory.PLAYERS, 1.0F, 1.0F);
 
-        source.sendFeedback(() -> Text.literal(message), false);
+        source.sendFeedback(() -> message, false);
         return 1; // Success
     }
 
