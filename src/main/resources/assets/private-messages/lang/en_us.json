@@ -1,0 +1,17 @@
+{
+  "private-messages.reload": "Config reloaded",
+  "private-messages.offlineMessageTitle": "§6You have §b%1$s§6 unread messages. Use §f/pm read",
+  "private-messages.noOfflineMessages": "§6You dont have unread messages",
+  "private-messages.offlineMessageHover": "§eClick to read",
+  "private-messages.playerOfflineMessage": "§aPlayer §b%1$s§a offline. He will receive your message when log in.",
+  "private-messages.playerNotFoundMessage": "§cPlayer §b%1$s§c not found.",
+  "private-messages.noLastMessageError": "§cYou have no one to reply to.",
+  "private-messages.clickToReplyHoverText": "§eClick to reply!",
+  "private-messages.ignoreAddedMessage": "§aYou are now ignoring §b%1$s.",
+  "private-messages.ignoreRemovedMessage": "§aYou are no longer ignoring §b%1$s.",
+  "private-messages.ignoredByPlayerMessage": "§cYou cannot message §b%1$s§c, as they are ignoring you.",
+  "private-messages.cannotSendToIgnoredPlayerMessage": "§cYou cannot send messages to §b%1$s§c because you are ignoring them.",
+  "private-messages.notificationEnabledMessage": "§aNotification sound enabled.",
+  "private-messages.notificationDisabledMessage": "§cNotification sound disabled.",
+  "private-messages.helpMessages": "§6/pm help §f- Show this help message\n§6/pm notification [on/off] §f- Enable or disable notification sounds\n§6/msg <player> <message> §f- Send a private message\n§6/reply <message> §f- Reply to the last received message\n§6/ignore <player> §f- Ignore or unignore a player"
+}

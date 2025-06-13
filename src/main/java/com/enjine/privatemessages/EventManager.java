@@ -11,7 +11,7 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-import static com.enjine.privatemessages.PrivateMessages.config;
+import static com.enjine.privatemessages.PrivateMessages.LOGGER;
 
 public class EventManager {
     public static void registerEvents() {
@@ -25,24 +25,24 @@ public class EventManager {
             }
 
             if (!data.offlineMessages.isEmpty()) {
-                player.sendMessage(Text.literal(config.offlineMessageTitle
-                        .replace("{amount}", String.valueOf(data.offlineMessages.size()))).styled(style -> style
+                player.sendMessage(Text.of(Text.translatable("private-messages.offlineMessageTitle", data.offlineMessages.size()).styled(style -> style
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm read"))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(config.offlineMessageHover)))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.offlineMessageHover").getString())))
                         .withColor(Formatting.YELLOW)
-                ));
+                ).getString()));
                 if (data.notificationEnabled) {
                     player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
             }
 
-            System.out.println("Loaded data for " + player.getEntityName() + ": " + data.ignoredPlayers);
+            LOGGER.info("[PM] Player data loaded for {}", player.getEntityName());
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             UUID playerUUID = player.getUuid();
             PlayerDataManager.unloadPlayerData(playerUUID);
+            LOGGER.info("[PM] Player data unloaded for {}", player.getEntityName());
         });
 
     }

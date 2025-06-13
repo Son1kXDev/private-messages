@@ -9,6 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static com.enjine.privatemessages.PrivateMessages.LOGGER;
+
 public class PlayerDataManager {
     private static final File DATA_DIR = new File("world/playerdata/pm");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -41,6 +43,7 @@ public class PlayerDataManager {
             try (FileWriter writer = new FileWriter(file)) {
                 GSON.toJson(data, writer);
             } catch (IOException e) {
+                LOGGER.error("[PM] {}", e.getLocalizedMessage());
                 e.fillInStackTrace();
             }
         }
@@ -59,6 +62,7 @@ public class PlayerDataManager {
                         names.add(data.name);
                     }
                 } catch (IllegalArgumentException e) {
+                    LOGGER.error("[PM] {}", e.getLocalizedMessage());
                     e.fillInStackTrace();
                 }
             }

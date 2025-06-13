@@ -13,7 +13,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
 import static com.enjine.privatemessages.MessageHandler.*;
-import static com.enjine.privatemessages.PrivateMessages.config;
 
 public class GlobalCommandManager {
     public static void registerCommands() {
@@ -116,8 +115,9 @@ public class GlobalCommandManager {
                         .then(CommandManager.literal("help")
                                 .executes(context -> {
                                     ServerCommandSource source = context.getSource();
-                                    for (String line : config.helpMessages) {
-                                        source.sendFeedback(() -> Text.literal(line), false);
+                                    String helpText = Text.translatable("private-messages.helpMessages").getString();
+                                    for (String line : helpText.split("\n")) {
+                                        source.sendMessage(Text.literal(line));
                                     }
                                     return 1; // Success
                                 })
@@ -133,7 +133,7 @@ public class GlobalCommandManager {
                                 .requires((source) -> source.hasPermissionLevel(4))
                                 .executes(context -> {
                                     PrivateMessages.config = ConfigManager.loadConfig();
-                                    context.getSource().sendFeedback(() -> Text.literal("Configuration reloaded."), false);
+                                    context.getSource().sendFeedback(() -> Text.of(Text.translatable("private-messages.reload").getString()), false);
                                     return 1; // Success
                                 })
                         )
@@ -145,10 +145,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreRemovedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreRemovedMessage", target.getEntityName()).getString()), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.literal(config.ignoreAddedMessage.replace("{player}", target.getEntityName())), false);
+            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreAddedMessage", target.getEntityName()).getString()), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -160,13 +160,13 @@ public class GlobalCommandManager {
         playerData.notificationEnabled = enabled;
         PlayerDataManager.savePlayerData(player.getUuid());
 
-        String message = enabled ? config.notificationEnabledMessage : config.notificationDisabledMessage;
+        var message = Text.of(Text.translatable(enabled ? "private-messages.notificationEnabledMessage" : "private-messages.notificationDisabledMessage").getString());
 
         player.playSound(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
                 SoundCategory.PLAYERS, 1.0F, 1.0F);
 
-        source.sendFeedback(() -> Text.literal(message), false);
+        source.sendFeedback(() -> message, false);
         return 1; // Success
     }
 

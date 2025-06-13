@@ -26,12 +26,12 @@ public class MessageHandler {
             PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
 
             if (senderData.ignoredPlayers.contains(target.getUuid())) {
-                sender.sendMessage(Text.literal(config.cannotSendToIgnoredPlayerMessage.replace("{player}", targetName)), false);
+                sender.sendMessage(Text.of(Text.translatable("private-messages.cannotSendToIgnoredPlayerMessage", targetName).getString()), false);
                 return 0; // Blocked
             }
 
             if (targetData.ignoredPlayers.contains(sender.getUuid())) {
-                sender.sendMessage(Text.literal(config.ignoredByPlayerMessage.replace("{player}", targetName)), false);
+                sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayerMessage", targetName).getString()), false);
                 return 0; // Blocked
             }
 
@@ -41,7 +41,7 @@ public class MessageHandler {
                             .replace("{message}", message))
                     .styled(style -> style
                             .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + source.getName() + " "))
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(config.clickToReplyHoverText)))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.clickToReplyHoverText").getString())))
                             .withColor(Formatting.YELLOW)
                     );
             String sendMessage = config.sendMessageFormat
@@ -60,29 +60,23 @@ public class MessageHandler {
             UUID targetUUID = PlayerDataManager.getUUIDByName(targetName);
 
             if (targetUUID != null) {
-                
+
                 PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(targetUUID);
-
-                if (senderData.ignoredPlayers.contains(target.getUuid())) {
-                    sender.sendMessage(Text.literal(config.cannotSendToIgnoredPlayerMessage.replace("{player}", targetName)), false);
+                if (senderData.ignoredPlayers.contains(targetUUID)) {
+                    sender.sendMessage(Text.of(Text.translatable("private-messages.cannotSendToIgnoredPlayerMessage", targetName).getString()), false);
                     return 0; // Blocked
                 }
-
                 if (targetData.ignoredPlayers.contains(sender.getUuid())) {
-                    sender.sendMessage(Text.literal(config.ignoredByPlayerMessage.replace("{player}", targetName)), false);
+                    sender.sendMessage(Text.of(Text.translatable("private-messages.ignoredByPlayerMessage", targetName).getString()), false);
                     return 0; // Blocked
                 }
-
-
                 targetData.offlineMessages.add(new PlayerDataManager.OfflineMessage(sender.getName().getString(), message));
                 PlayerDataManager.savePlayerData(targetUUID);
                 PlayerDataManager.unloadPlayerData(targetUUID);
-                String playerOfflineMessage = config.playerOfflineMessage.replace("{target}", targetName);
-                sender.sendMessage(Text.literal(playerOfflineMessage));
+                sender.sendMessage(Text.of(Text.translatable("private-messages.playerOfflineMessage", targetName).getString()));
                 return 1; // Success
             } else {
-                String playerNotFoundMessage = config.playerNotFoundMessage.replace("{target}", targetName);
-                source.sendError(Text.literal(playerNotFoundMessage));
+                source.sendError(Text.of(Text.translatable("private-messages.playerNotFoundMessage", targetName).getString()));
                 return 0; // Error
             }
         }
@@ -94,7 +88,7 @@ public class MessageHandler {
             UUID playerUUID = player.getUuid();
             PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
             if (data.offlineMessages.isEmpty()) {
-                player.sendMessage(Text.of(config.noOfflineMessages), false);
+                player.sendMessage(Text.of(Text.translatable("private-messages.noOfflineMessages").getString()), false);
             }
             for (PlayerDataManager.OfflineMessage msg : data.offlineMessages) {
                 Text message = Text.literal(config.offlineMessageFormat
@@ -131,7 +125,7 @@ public class MessageHandler {
 
             return 1; // Success
         } else {
-            source.sendError(Text.literal(config.noLastMessageError));
+            source.sendError(Text.of(Text.translatable("private-messages.noLastMessageError").getString()));
             return 0; // Error
         }
     }
