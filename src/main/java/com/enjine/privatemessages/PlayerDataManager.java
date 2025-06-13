@@ -9,6 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static com.enjine.privatemessages.PrivateMessages.LOGGER;
+
 public class PlayerDataManager {
     private static final File DATA_DIR = new File("world/playerdata/pm");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -41,10 +43,50 @@ public class PlayerDataManager {
             try (FileWriter writer = new FileWriter(file)) {
                 GSON.toJson(data, writer);
             } catch (IOException e) {
+                LOGGER.error("[PM] {}", e.getLocalizedMessage());
                 e.fillInStackTrace();
             }
         }
     }
+
+    public static Set<String> getAllKnownPlayerNames() {
+        Set<String> names = new HashSet<>();
+        File[] files = DATA_DIR.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files != null) {
+            for (File file : files) {
+                String uuidStr = file.getName().replace(".json", "");
+                try {
+                    UUID uuid = UUID.fromString(uuidStr);
+                    PlayerData data = getPlayerData(uuid);
+                    if (data.name != null) {
+                        names.add(data.name);
+                    }
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("[PM] {}", e.getLocalizedMessage());
+                    e.fillInStackTrace();
+                }
+            }
+        }
+        return names;
+    }
+
+    public static UUID getUUIDByName(String name) {
+        File[] files = DATA_DIR.listFiles((dir, fname) -> fname.endsWith(".json"));
+        if (files != null) {
+            for (File file : files) {
+                try {
+                    UUID uuid = UUID.fromString(file.getName().replace(".json", ""));
+                    PlayerData data = getPlayerData(uuid);
+                    if (data.name != null && data.name.equalsIgnoreCase(name)) {
+                        return uuid;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
 
     public static void unloadPlayerData(UUID playerUUID) {
         savePlayerData(playerUUID);
@@ -54,6 +96,29 @@ public class PlayerDataManager {
     public static class PlayerData {
         public Set<UUID> ignoredPlayers = new HashSet<>();
         public boolean notificationEnabled = true;
+        public String name = "";
+        public List<Message> offlineMessages = new ArrayList<Message>();
+        public List<Message> history = new ArrayList<Message>();
+    }
+
+    public static class Message {
+        public String sender = "";
+        public String target = "";
+        public String message = "";
+
+        public Message(String sender, String message) {
+            this.sender = sender;
+            this.message = message;
+        }
+
+        public Message(String sender, String target, String message) {
+            this.sender = sender;
+            this.target = target;
+            this.message = message;
+        }
+
+        public Message() {
+        }
     }
 }
 
