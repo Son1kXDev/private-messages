@@ -1,0 +1,20 @@
+{
+  "private-messages.reload": "Конфиг перезагружен",
+  "private-messages.hasOfflineMessages": "§6У вас есть §b%1$s§6 непрочитанных сообщений.",
+  "private-messages.noOfflineMessages": "§6У вас нет непрочитанных сообщений.",
+  "private-messages.offlineMessageHover": "§eНажми чтобы прочитать",
+  "private-messages.messageToOfflinePlayer": "§aИгрок §b%1$s§a не в сети. Он получит сообщение, когда зайдет на сервер.",
+  "private-messages.noHistory": "§6Ваша история пуста.",
+  "private-messages.historyTitle": "§aПоказаны последние 20 сообщений:",
+  "private-messages.clearHistory": "§aИстория очищена.",
+  "private-messages.playerNotFound": "§cИгрок §b%1$s§c не найден.",
+  "private-messages.noLastMessageError": "§cУ вас нет сообщений, на которые можно ответить.",
+  "private-messages.clickToReplyHover": "§eНажми чтобы ответить",
+  "private-messages.ignoreAdded": "§aИгрок §b%1$s§a добавлен в черный список.",
+  "private-messages.ignoreRemoved": "§aИгрок §b%1$s§a удален из черного списка.",
+  "private-messages.ignoredByPlayer": "§cВы не можете отправить сообщение игроку §b%1$s§c, потому что он добавил вас в черный список.",
+  "private-messages.ignoringPlayer": "§cВы не можете отправить сообщение игроку §b%1$s§c потому что добавили его в черный список.",
+  "private-messages.notificationEnabled": "§aЗвук уведомлений включен.",
+  "private-messages.notificationDisabled": "§cЗвук уведомлений выключен.",
+  "private-messages.help": "§6/pm notification [on/off] §f- Переключение звука уведомлений\n§6/pm read §f- Прочитать полученные оффлайн сообщения\n§6/pm history §f- Посмотреть историю последних 20 сообщений\n§6/pm clear §f- Очистить историю сообщений\n§6/msg <player> <message> §f- Отправить личное сообщение\n§6/reply <message> §f- Ответить на последнее полученное сообщение\n§6/ignore <player> §f- Добавить или удалить игрока из черного списка"
+}
