@@ -32,7 +32,7 @@ public class EventManager {
                         .withColor(Formatting.YELLOW)
                 ));
                 if (data.notificationEnabled) {
-                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
             }
 
