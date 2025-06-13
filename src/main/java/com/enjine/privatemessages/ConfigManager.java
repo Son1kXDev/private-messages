@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
+
+import static com.enjine.privatemessages.PrivateMessages.LOGGER;
 
 public class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -16,13 +19,18 @@ public class ConfigManager {
         if (!CONFIG_FILE.exists()) {
             PrivateMessagesConfig defaultConfig = new PrivateMessagesConfig();
             saveConfig(defaultConfig);
+            Locale.setDefault(new Locale("en_us"));
             return defaultConfig;
         }
 
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
-            return GSON.fromJson(reader, PrivateMessagesConfig.class);
+            PrivateMessagesConfig config = GSON.fromJson(reader, PrivateMessagesConfig.class);
+            Locale.setDefault(new Locale(config.language));
+            return config;
         } catch (IOException e) {
-            e.printStackTrace();
+            e.fillInStackTrace();
+            LOGGER.error("[PM] {}", e.getLocalizedMessage());
+            Locale.setDefault(new Locale("en_us"));
             return new PrivateMessagesConfig();
         }
     }
@@ -31,7 +39,8 @@ public class ConfigManager {
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("[PM] {}", e.getLocalizedMessage());
+            e.fillInStackTrace();
         }
     }
 }
