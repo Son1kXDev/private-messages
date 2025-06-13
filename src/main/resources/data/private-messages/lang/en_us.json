@@ -1,0 +1,17 @@
+{
+  "private-messages.reload": "Configuration is reloaded",
+  "private-messages.hasOfflineMessages": "§6You have §b$s§6 unread messages.",
+  "private-messages.noOfflineMessages": "§6You dont have unread messages.",
+  "private-messages.offlineMessageHover": "§eClick to read",
+  "private-messages.messageToOfflinePlayer": "§aPlayer §b$s§a is offline. He will receive your message when log in.",
+  "private-messages.playerNotFound": "§cPlayer §b$s§c not found.",
+  "private-messages.noLastMessageError": "§cYou have no one to reply to.",
+  "private-messages.clickToReplyHover": "§eClick to reply",
+  "private-messages.ignoreAddedMessage": "§aYou are now ignoring §b%1$s.",
+  "private-messages.ignoreRemovedMessage": "§aYou are no longer ignoring §b%1$s.",
+  "private-messages.ignoredByPlayer": "§cYou cannot message §b$s§c, as they are ignoring you.",
+  "private-messages.ignoringPlayer": "§cYou cannot send messages to §b$s§c because you are ignoring them.",
+  "private-messages.notificationEnabled": "§aNotification sound enabled.",
+  "private-messages.notificationDisabled": "§cNotification sound disabled.",
+  "private-messages.help": "§6/pm notification [on/off] §f- Toggle notification sounds\n§6/msg <player> <message> §f- Send a private message\n§6/reply <message> §f- Reply to the last received message\n§6/pm read §f- Read offline messages\n§6/ignore <player> §f- Ignore or unignore a player"
+}
