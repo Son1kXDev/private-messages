@@ -79,7 +79,7 @@ public class MessageHandler {
                 PlayerHistoryManager.addMessage(sender.getUuid(), msg);
                 PlayerHistoryManager.addMessage(targetUUID, msg);
                 PlayerDataManager.unloadPlayerData(targetUUID);
-                sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", targetName).getString()));
+                sender.sendMessage(Text.of(Text.translatable("private-messages.messageToOfflinePlayer", targetName).getString()), false);
                 return 1; // Success
             } else {
                 source.sendError(Text.of(Text.translatable("private-messages.playerNotFound", targetName).getString()));

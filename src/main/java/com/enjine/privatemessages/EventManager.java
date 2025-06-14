@@ -6,7 +6,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -31,7 +30,7 @@ public class EventManager {
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm read"))
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(Text.translatable("private-messages.offlineMessageHover").getString())))
                         .withColor(Formatting.YELLOW)
-                ));
+                ), false);
                 if (data.notificationEnabled) {
                     player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
