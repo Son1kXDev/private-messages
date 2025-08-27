@@ -14,7 +14,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.enjine.privatemessages.PrivateMessages.*;
+import static com.enjine.privatemessages.PrivateMessages.config;
+import static com.enjine.privatemessages.PrivateMessages.lastMessageSender;
 
 public class MessageHandler {
 
@@ -96,8 +97,6 @@ public class MessageHandler {
     public static int sendNote(ServerCommandSource source, String content) {
         ServerPlayerEntity target = source.getPlayer();
         if (target != null) {
-            LOGGER.info(content);
-            LOGGER.info(String.valueOf(Text.translatable("private-messages.noteSaved", content)));
             Text sourceMessage = Text.translatable("private-messages.noteSaved", content)
                     .styled(style -> style
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm notes"))
