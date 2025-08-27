@@ -13,7 +13,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
 import static com.enjine.privatemessages.MessageHandler.*;
-import static com.enjine.privatemessages.PlayerHistoryManager.clear;
 
 public class GlobalCommandManager {
     public static void registerCommands() {
@@ -28,9 +27,11 @@ public class GlobalCommandManager {
             registerReplyCommand(dispatcher, "reply");
             registerReplyCommand(dispatcher, "r");
 
-            registerReadOfflineCommand(dispatcher, "read");
-            registerHistoryCommand(dispatcher, "history");
-            registerHistoryClearCommand(dispatcher, "clear");
+            registerReadOfflineCommand(dispatcher);
+            registerHistoryCommand(dispatcher);
+            registerHistoryClearCommand(dispatcher);
+            registerNotesCommand(dispatcher);
+            registerNotesClearCommand(dispatcher);
 
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
@@ -40,30 +41,51 @@ public class GlobalCommandManager {
         });
     }
 
-    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
+                        CommandManager.literal("read")
                                 .executes(context -> readOfflineMessages(context.getSource()))
                 )
         );
     }
 
-    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
+                        CommandManager.literal("history")
                                 .executes(context -> history(context.getSource()))
                 )
         );
     }
 
-    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm")
+                        .then(CommandManager.literal("history")
+                                .then(CommandManager.literal("clear")
+                                        .executes(context -> PlayerHistoryManager.clear(context.getSource()))
+                                ))
+        );
+    }
+
+    private static void registerNotesCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
-                                .executes(context -> clear(context.getSource()))
+                        CommandManager.literal("notes")
+                                .executes(context -> notes(context.getSource()))
                 )
+        );
+    }
+
+    private static void registerNotesClearCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm")
+                        .then(CommandManager.literal("notes")
+                                .then(CommandManager.literal("clear")
+                                        .executes(context -> PlayerNotesManager.clear(context.getSource()))
+                                ))
+
         );
     }
 

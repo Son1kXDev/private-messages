@@ -99,6 +99,7 @@ public class PlayerDataManager {
         public String name = "";
         public List<Message> offlineMessages = new ArrayList<Message>();
         public List<Message> history = new ArrayList<Message>();
+        public List<Note> notes = new ArrayList<Note>();
     }
 
     public static class Message {
@@ -118,6 +119,19 @@ public class PlayerDataManager {
         }
 
         public Message() {
+        }
+    }
+
+    public static class Note {
+        public String dateTime = "";
+        public String content = "";
+
+        public Note(String dateTime, String content) {
+            this.dateTime = dateTime;
+            this.content = content;
+        }
+
+        public Note() {
         }
     }
 }

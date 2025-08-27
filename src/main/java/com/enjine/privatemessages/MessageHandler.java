@@ -9,11 +9,12 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.enjine.privatemessages.PrivateMessages.config;
-import static com.enjine.privatemessages.PrivateMessages.lastMessageSender;
+import static com.enjine.privatemessages.PrivateMessages.*;
 
 public class MessageHandler {
 
@@ -23,6 +24,10 @@ public class MessageHandler {
         PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
 
         if (target != null) {
+
+            if (sender.getUuid() == target.getUuid()) {
+                return sendNote(source, message);
+            }
 
             PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
 
@@ -86,6 +91,47 @@ public class MessageHandler {
                 return 0;
             }
         }
+    }
+
+    public static int sendNote(ServerCommandSource source, String content) {
+        ServerPlayerEntity target = source.getPlayer();
+        if (target != null) {
+            LOGGER.info(content);
+            LOGGER.info(String.valueOf(Text.translatable("private-messages.noteSaved", content)));
+            Text sourceMessage = Text.translatable("private-messages.noteSaved", content)
+                    .styled(style -> style
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm notes"))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.clickToReadNotesHover")))
+                            .withColor(Formatting.YELLOW)
+                    );
+
+            source.sendMessage(sourceMessage);
+            String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
+            PlayerNotesManager.addNote(target.getUuid(), new PlayerDataManager.Note(dateTime, content));
+            return 1;
+        } else return 0;
+    }
+
+    public static int notes(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player != null) {
+            UUID playerUUID = player.getUuid();
+            PlayerDataManager.PlayerData data = PlayerDataManager.getPlayerData(playerUUID);
+            if (data.notes.isEmpty()) {
+                player.sendMessage(Text.translatable("private-messages.noNotes"), false);
+                return 1;
+            }
+            player.sendMessage(Text.translatable("private-messages.notesTitle"), false);
+            for (PlayerDataManager.Note note : data.notes) {
+                String message = config.notesFormat
+                        .replace("{dateTime}", note.dateTime)
+                        .replace("{content}", note.content);
+
+                player.sendMessage(Text.literal(message), false);
+            }
+            PlayerDataManager.savePlayerData(playerUUID);
+            return 1;
+        } else return 0;
     }
 
     public static int readOfflineMessages(ServerCommandSource source) {

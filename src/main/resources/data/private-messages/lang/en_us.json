@@ -10,11 +10,16 @@
   "private-messages.playerNotFound": "§cPlayer §b%1$s§c not found.",
   "private-messages.noLastMessageError": "§cYou have no one to reply to.",
   "private-messages.clickToReplyHover": "§eClick to reply",
+  "private-messages.noteSaved": "§aYour message saved to notes: §f%1$s",
+  "private-messages.clickToReadNotesHover": "§eClick to read notes",
+  "private-messages.notesTitle": "§aNotes:",
+  "private-messages.noNotes": "§6You dont have notes.",
+  "private-messages.clearNotes": "§aYour notes was cleared.",
   "private-messages.ignoreAdded": "§aYou are now ignoring §b%1$s.",
   "private-messages.ignoreRemoved": "§aYou are no longer ignoring §b%1$s.",
   "private-messages.ignoredByPlayer": "§cYou cannot message §b%1$s§c, as they are ignoring you.",
   "private-messages.ignoringPlayer": "§cYou cannot send messages to §b%1$s§c because you are ignoring them.",
   "private-messages.notificationEnabled": "§aNotification sound enabled.",
   "private-messages.notificationDisabled": "§cNotification sound disabled.",
-  "private-messages.help": "§6/pm notification [on/off] §f- Toggle notification sounds\n§6/pm read §f- Read offline messages\n§6/pm history §f- View history of last 20 messages\n§6/pm clear §f- Clear messages history\n§6/msg <player> <message> §f- Send a private message\n§6/reply <message> §f- Reply to the last received message\n§6/ignore <player> §f- Ignore or unignore a player"
+  "private-messages.help": "§6/pm notification [on/off] §f- Toggle notification sounds\n§6/pm read §f- Read offline messages\n§6/pm history §f- View history of last 20 messages\n§6/pm history clear §f- Clear messages history\n§6/pm notes §f- View your saved notes\n§6/pm notes clear §f- Clear notes\n§6/msg <player> <message> §f- Send a private message\n§6/msg <your_nickname> <message> §f- Save a note\n§6/reply <message> §f- Reply to the last received message\n§6/ignore <player> §f- Ignore or unignore a player"
 }
