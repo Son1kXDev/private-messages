@@ -17,18 +17,18 @@ public class PrivateMessages implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("[PM] Initializing");
-        LOGGER.info("[PM] Loading configuration");
+        LOGGER.info("Initializing");
+        LOGGER.info("Loading configuration");
         config = ConfigManager.loadConfig();
-        LOGGER.info("[PM] Configuration is loaded");
+        LOGGER.info("Configuration is loaded");
         ServerLanguageDefinition language = ServerTranslations.INSTANCE.getLanguageDefinition(config.language);
         ServerTranslations.INSTANCE.setSystemLanguage(language);
-        LOGGER.info("[PM] Selected language: {}, {}", language.code(), language.name());
+        LOGGER.info("Selected language: {}, {}", language.code(), language.name());
 
         PlayerDataManager.initialize();
         GlobalCommandManager.registerCommands();
         EventManager.registerEvents();
-        LOGGER.info("[PM] Initialized");
+        LOGGER.info("Initialized");
     }
 
 }

@@ -1,6 +1,7 @@
 package com.enjine.privatemessages;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -12,8 +13,9 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
+import java.util.Objects;
+
 import static com.enjine.privatemessages.MessageHandler.*;
-import static com.enjine.privatemessages.PlayerHistoryManager.clear;
 
 public class GlobalCommandManager {
     public static void registerCommands() {
@@ -28,9 +30,16 @@ public class GlobalCommandManager {
             registerReplyCommand(dispatcher, "reply");
             registerReplyCommand(dispatcher, "r");
 
-            registerReadOfflineCommand(dispatcher, "read");
-            registerHistoryCommand(dispatcher, "history");
-            registerHistoryClearCommand(dispatcher, "clear");
+            registerReadOfflineCommand(dispatcher);
+            registerHistoryCommand(dispatcher);
+            registerHistoryClearCommand(dispatcher);
+
+            registerNotesCommand(dispatcher);
+            registerNotesPinCommand(dispatcher);
+            registerNotesRemoveCommand(dispatcher);
+            registerNotesRemoveRangeCommand(dispatcher);
+            registerNotesSearchCommand(dispatcher);
+            registerNotesClearCommand(dispatcher);
 
             registerIgnoreCommand(dispatcher);
             registerNotificationCommand(dispatcher);
@@ -40,29 +49,131 @@ public class GlobalCommandManager {
         });
     }
 
-    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerReadOfflineCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
+                        CommandManager.literal("read")
                                 .executes(context -> readOfflineMessages(context.getSource()))
                 )
         );
     }
 
-    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerHistoryCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
+                        CommandManager.literal("history")
                                 .executes(context -> history(context.getSource()))
                 )
         );
     }
 
-    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher, String commandName) {
+    private static void registerHistoryClearCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm")
+                        .then(CommandManager.literal("history")
+                                .then(CommandManager.literal("clear")
+                                        .executes(context -> PlayerHistoryManager.clear(context.getSource()))
+                                ))
+        );
+    }
+
+    private static void registerNotesCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("pm").then(
-                        CommandManager.literal(commandName)
-                                .executes(context -> clear(context.getSource()))
+                        CommandManager.literal("notes")
+                                .executes(context -> notes(context.getSource(), 1))
+                                .then(CommandManager.argument("page", IntegerArgumentType.integer(1))
+                                        .executes(
+                                                context -> notes(context.getSource(),
+                                                        IntegerArgumentType.getInteger(context, "page"))))
+                )
+        );
+    }
+
+    private static void registerNotesClearCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm")
+                        .then(CommandManager.literal("notes")
+                                .then(CommandManager.literal("clear")
+                                        .executes(context -> PlayerNotesManager.clear(context.getSource()))
+                                ))
+
+        );
+    }
+
+    private static void registerNotesRemoveCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal("notes")
+                                .then(CommandManager.literal("remove")
+                                        .then(CommandManager.argument("index", IntegerArgumentType.integer(1))
+                                                .executes(context ->
+                                                        removeNote(
+                                                                Objects.requireNonNull(context.getSource().getPlayer()),
+                                                                IntegerArgumentType.getInteger(context, "index"),
+                                                                context.getSource()
+                                                        )
+                                                )
+                                        )
+                                )
+                )
+        );
+    }
+
+    private static void registerNotesRemoveRangeCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal("notes")
+                                .then(CommandManager.literal("remove")
+                                        .then(CommandManager.argument("from", IntegerArgumentType.integer(1))
+                                                .then(CommandManager.argument("to", IntegerArgumentType.integer(2))
+                                                        .executes(context ->
+                                                                removeNotes(
+                                                                        Objects.requireNonNull(context.getSource().getPlayer()),
+                                                                        IntegerArgumentType.getInteger(context, "from"),
+                                                                        IntegerArgumentType.getInteger(context, "to"),
+                                                                        context.getSource()
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                )
+        );
+    }
+
+    private static void registerNotesSearchCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal("notes").then(
+                                CommandManager.literal("search").then(
+                                        CommandManager.argument("keyword", StringArgumentType.string())
+                                                .executes(context -> MessageHandler.notes(
+                                                                context.getSource(), 1,
+                                                                StringArgumentType.getString(context, "keyword")
+                                                        )
+                                                ).then(CommandManager.argument("page", IntegerArgumentType.integer(1))
+                                                        .executes(context -> MessageHandler.notes(
+                                                                context.getSource(),
+                                                                IntegerArgumentType.getInteger(context, "page"),
+                                                                StringArgumentType.getString(context, "keyword")
+                                                        ))
+                                                )
+                                )
+                        )
+                )
+        );
+    }
+
+    private static void registerNotesPinCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+        dispatcher.register(
+                CommandManager.literal("pm").then(
+                        CommandManager.literal("notes")
+                                .then(CommandManager.literal("pin")
+                                        .then(CommandManager.argument("index", IntegerArgumentType.integer(1))
+                                                .executes(context -> toggleNotePin(Objects.requireNonNull(context.getSource().getPlayer()),
+                                                        IntegerArgumentType.getInteger(context, "index"), context.getSource())))
+                                )
                 )
         );
     }
@@ -111,6 +222,7 @@ public class GlobalCommandManager {
                                     ServerPlayerEntity sender = context.getSource().getPlayer();
                                     ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
 
+                                    assert sender != null;
                                     return toggleIgnorePlayer(sender, target, context.getSource());
                                 })
                         )
@@ -122,10 +234,12 @@ public class GlobalCommandManager {
                 CommandManager.literal("pm")
                         .then(CommandManager.literal("notification")
                                 .then(CommandManager.literal("on")
-                                        .executes(context -> setNotification(context.getSource().getPlayer(), true, context.getSource()))
+                                        .executes(context ->
+                                                setNotification(Objects.requireNonNull(context.getSource().getPlayer()), true, context.getSource()))
                                 )
                                 .then(CommandManager.literal("off")
-                                        .executes(context -> setNotification(context.getSource().getPlayer(), false, context.getSource()))
+                                        .executes(context ->
+                                                setNotification(Objects.requireNonNull(context.getSource().getPlayer()), false, context.getSource()))
                                 )
                         )
         );
@@ -157,11 +271,35 @@ public class GlobalCommandManager {
                                 .requires((source) -> source.hasPermissionLevel(4))
                                 .executes(context -> {
                                     PrivateMessages.config = ConfigManager.loadConfig();
-                                    context.getSource().sendFeedback(() -> Text.of(Text.translatable("private-messages.reload").getString()), false);
+                                    context.getSource().sendFeedback(() -> Text.translatable("private-messages.reload"), false);
                                     return 1; // Success
                                 })
                         )
         );
+    }
+
+    private static int removeNote(ServerPlayerEntity player, int index, ServerCommandSource source) {
+        int result = PlayerNotesManager.remove(player.getUuid(), index);
+        var message = Text.translatable(result == 1 ? "private-messages.noteRemoved" : "private-messages.noteNotFound", index);
+        source.sendFeedback(() -> message, false);
+        return result;
+    }
+
+    private static int removeNotes(ServerPlayerEntity player, int from, int to, ServerCommandSource source) {
+        int result = PlayerNotesManager.removeRange(player.getUuid(), from, to);
+        var message = Text.translatable(result == 1 ? "private-messages.notesRemoved" : "private-messages.notesNotFound", from, to);
+        source.sendFeedback(() -> message, false);
+        return result;
+    }
+
+    private static int toggleNotePin(ServerPlayerEntity player, int index, ServerCommandSource source) {
+        PlayerDataManager.PlayerData playerData = PlayerDataManager.getPlayerData(player.getUuid());
+        boolean pinned = PlayerNotesManager.togglePin(player.getUuid(), index);
+
+        var message = Text.translatable(pinned ? "private-messages.notePinned" : "private-messages.noteUnpinned", index);
+
+        source.sendFeedback(() -> message, false);
+        return 1;
     }
 
     private static int toggleIgnorePlayer(ServerPlayerEntity sender, ServerPlayerEntity target, ServerCommandSource source) {
@@ -169,10 +307,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreRemoved", target.getNameForScoreboard()).getString()), false);
+            source.sendFeedback(() -> Text.translatable("private-messages.ignoreRemoved", target.getNameForScoreboard()), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.of(Text.translatable("private-messages.ignoreAdded", target.getNameForScoreboard()).getString()), false);
+            source.sendFeedback(() -> Text.translatable("private-messages.ignoreAdded", target.getNameForScoreboard()), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -184,7 +322,7 @@ public class GlobalCommandManager {
         playerData.notificationEnabled = enabled;
         PlayerDataManager.savePlayerData(player.getUuid());
 
-        var message = Text.of(Text.translatable(enabled ? "private-messages.notificationEnabled" : "private-messages.notificationDisabled").getString());
+        var message = Text.translatable(enabled ? "private-messages.notificationEnabled" : "private-messages.notificationDisabled");
 
         player.playSoundToPlayer(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
