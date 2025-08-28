@@ -307,10 +307,10 @@ public class GlobalCommandManager {
 
         if (senderData.ignoredPlayers.contains(target.getUuid())) {
             senderData.ignoredPlayers.remove(target.getUuid());
-            source.sendFeedback(() -> Text.translatable("private-messages.ignoreRemoved", target.getNameForScoreboard()), false);
+            source.sendFeedback(() -> Text.translatable("private-messages.ignoreRemoved", target.getEntityName()), false);
         } else {
             senderData.ignoredPlayers.add(target.getUuid());
-            source.sendFeedback(() -> Text.translatable("private-messages.ignoreAdded", target.getNameForScoreboard()), false);
+            source.sendFeedback(() -> Text.translatable("private-messages.ignoreAdded", target.getEntityName()), false);
         }
 
         PlayerDataManager.savePlayerData(sender.getUuid());
@@ -324,7 +324,7 @@ public class GlobalCommandManager {
 
         var message = Text.translatable(enabled ? "private-messages.notificationEnabled" : "private-messages.notificationDisabled");
 
-        player.playSoundToPlayer(
+        player.playSound(
                 enabled ? SoundEvents.BLOCK_NOTE_BLOCK_BELL.value() : SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(),
                 SoundCategory.PLAYERS, 1.0F, 1.0F);
 

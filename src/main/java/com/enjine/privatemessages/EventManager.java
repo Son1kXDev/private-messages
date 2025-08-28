@@ -30,7 +30,7 @@ public class EventManager {
                         .withColor(Formatting.YELLOW)
                 ), false);
                 if (data.notificationEnabled) {
-                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
             }
         });

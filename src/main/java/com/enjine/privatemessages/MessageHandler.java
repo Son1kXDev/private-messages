@@ -58,7 +58,7 @@ public class MessageHandler {
             PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), targetName, message));
 
             if (targetData.notificationEnabled) {
-                target.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1;
@@ -326,7 +326,7 @@ public class MessageHandler {
                 PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), target.getName().getString(), message));
 
                 if (lastSenderData.notificationEnabled) {
-                    target.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
 
                 return 1;
