@@ -11,8 +11,6 @@ import net.minecraft.util.Formatting;
 
 import java.util.UUID;
 
-import static com.enjine.privatemessages.PrivateMessages.LOGGER;
-
 public class EventManager {
     public static void registerEvents() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -35,15 +33,12 @@ public class EventManager {
                     player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
             }
-
-            LOGGER.info("[PM] Player data loaded for {}", player.getNameForScoreboard());
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             UUID playerUUID = player.getUuid();
             PlayerDataManager.unloadPlayerData(playerUUID);
-            LOGGER.info("[PM] Player data unloaded for {}", player.getNameForScoreboard());
         });
 
     }
