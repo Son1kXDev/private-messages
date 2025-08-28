@@ -1,0 +1,3 @@
+files:
+  - source: src/main/resources/data/private-messages/lang/*.json
+    translation: src/main/resources/data/private-messages/lang/%original_file_name%
