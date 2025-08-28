@@ -48,7 +48,7 @@ public class PlayerDataManager {
                     if (data == null) data = new PlayerData();
                     return data;
                 } catch (Exception e) {
-                    LOGGER.error("[PM] Failed to load player data for {}: {}", uuid, e.toString());
+                    LOGGER.error("Failed to load player data for {}: {}", uuid, e.toString());
                 }
             }
             return new PlayerData();
@@ -64,7 +64,7 @@ public class PlayerDataManager {
                 String enc = ENC_PREFIX + encryptToBase64(json, playerUUID);
                 Files.writeString(file.toPath(), enc, StandardCharsets.UTF_8);
             } catch (Exception e) {
-                LOGGER.error("[PM] {}", e.getLocalizedMessage());
+                LOGGER.error("{}", e.getLocalizedMessage());
             }
         }
     }
@@ -82,7 +82,7 @@ public class PlayerDataManager {
                         names.add(data.name);
                     }
                 } catch (IllegalArgumentException e) {
-                    LOGGER.error("[PM] {}", e.getLocalizedMessage());
+                    LOGGER.error("{}", e.getLocalizedMessage());
                 }
             }
         }
@@ -120,7 +120,7 @@ public class PlayerDataManager {
             if (data == null) data = new PlayerData();
             return data;
         } catch (Exception e) {
-            LOGGER.error("[PM] Failed to read data from {}: {}", file.getName(), e.toString());
+            LOGGER.error("Failed to read data from {}: {}", file.getName(), e.toString());
             return null;
         }
     }
@@ -133,7 +133,6 @@ public class PlayerDataManager {
     // =====================  CRYPTO  =====================
 
     private static byte[] getKeyFromUUID(UUID uuid) throws Exception {
-        // Генерируем 256-битный ключ через SHA-256 от UUID.toString()
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return digest.digest(uuid.toString().getBytes(StandardCharsets.UTF_8));
     }
@@ -204,6 +203,7 @@ public class PlayerDataManager {
     public static class Note {
         public String dateTime = "";
         public String content = "";
+        public boolean pinned = false;
 
         public Note(String dateTime, String content) {
             this.dateTime = dateTime;

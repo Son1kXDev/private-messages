@@ -29,7 +29,7 @@ public class ConfigManager {
             return config;
         } catch (IOException e) {
             e.fillInStackTrace();
-            LOGGER.error("[PM] {}", e.getLocalizedMessage());
+            LOGGER.error("{}", e.getLocalizedMessage());
             Locale.setDefault(new Locale("en_us"));
             return new PrivateMessagesConfig();
         }
@@ -39,7 +39,7 @@ public class ConfigManager {
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);
         } catch (IOException e) {
-            LOGGER.error("[PM] {}", e.getLocalizedMessage());
+            LOGGER.error("{}", e.getLocalizedMessage());
             e.fillInStackTrace();
         }
     }
