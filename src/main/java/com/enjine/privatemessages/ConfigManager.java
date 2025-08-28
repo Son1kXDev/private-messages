@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Locale;
 
 import static com.enjine.privatemessages.PrivateMessages.LOGGER;
@@ -25,13 +26,34 @@ public class ConfigManager {
 
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
             PrivateMessagesConfig config = GSON.fromJson(reader, PrivateMessagesConfig.class);
+            PrivateMessagesConfig defaultConfig = new PrivateMessagesConfig();
+
+            boolean updated = false;
+
+            for (Field field : PrivateMessagesConfig.class.getDeclaredFields()) {
+                field.setAccessible(true);
+                Object value = field.get(config);
+                Object defaultValue = field.get(defaultConfig);
+
+                if (value == null) {
+                    field.set(config, defaultValue);
+                    updated = true;
+                } else if (value instanceof String str && str.isEmpty()) {
+                    field.set(config, defaultValue);
+                    updated = true;
+                }
+            }
+
+            if (updated) saveConfig(config);
+
             Locale.setDefault(new Locale(config.language));
             return config;
-        } catch (IOException e) {
+        } catch (IOException | IllegalAccessException e) {
             e.fillInStackTrace();
             LOGGER.error("{}", e.getLocalizedMessage());
-            Locale.setDefault(new Locale("en_us"));
-            return new PrivateMessagesConfig();
+            PrivateMessagesConfig defaultConfig = new PrivateMessagesConfig();
+            saveConfig(defaultConfig);
+            return defaultConfig;
         }
     }
 
