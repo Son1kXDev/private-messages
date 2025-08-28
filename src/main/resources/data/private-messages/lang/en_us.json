@@ -22,7 +22,7 @@
   "private-messages.notesRemoved": "§aNotes from §f[%1$s]§a to §f[%2$s]§a removed",
   "private-messages.noteNotFound": "§aNote §f[%1$s]§a not found",
   "private-messages.notePinned": "§aNote §f[%1$s]§a is pinned",
-  "private-messages.noteUnpinned": "§cNote §f[%1$s]§a is unpinned",
+  "private-messages.noteUnpinned": "§cNote §f[%1$s]§c is unpinned",
   "private-messages.clearNotes": "§aYour notes was cleared.",
   "private-messages.ignoreAdded": "§aYou are now ignoring §b%1$s.",
   "private-messages.ignoreRemoved": "§aYou are no longer ignoring §b%1$s.",
