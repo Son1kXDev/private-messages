@@ -4,13 +4,12 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 
-import java.util.Objects;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static com.enjine.privatemessages.PrivateMessages.config;
 import static com.enjine.privatemessages.PrivateMessages.lastMessageSender;
@@ -23,6 +22,10 @@ public class MessageHandler {
         PlayerDataManager.PlayerData senderData = PlayerDataManager.getPlayerData(sender.getUuid());
 
         if (target != null) {
+
+            if (sender.getUuid() == target.getUuid()) {
+                return sendNote(source, message);
+            }
 
             PlayerDataManager.PlayerData targetData = PlayerDataManager.getPlayerData(target.getUuid());
 
@@ -55,7 +58,7 @@ public class MessageHandler {
             PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), targetName, message));
 
             if (targetData.notificationEnabled) {
-                target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                target.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
 
             return 1;
@@ -86,6 +89,168 @@ public class MessageHandler {
                 return 0;
             }
         }
+    }
+
+    public static int sendNote(ServerCommandSource source, String content) {
+        ServerPlayerEntity target = source.getPlayer();
+        if (target != null) {
+            Text sourceMessage = Text.translatable("private-messages.noteSaved", content)
+                    .styled(style -> style
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm notes"))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.clickToReadNotesHover")))
+                            .withColor(Formatting.YELLOW)
+                    );
+
+            source.sendMessage(sourceMessage);
+            String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
+            PlayerNotesManager.addNote(target.getUuid(), new PlayerDataManager.Note(dateTime, content));
+            return 1;
+        } else return 0;
+    }
+
+    public static int notes(ServerCommandSource source, int page) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player == null) return 0;
+
+        UUID playerUUID = player.getUuid();
+        List<PlayerDataManager.Note> notes = PlayerNotesManager.getNotes(playerUUID);
+        if (notes.isEmpty()) {
+            player.sendMessage(Text.translatable("private-messages.noNotes"), false);
+            return 1;
+        }
+
+        List<Map.Entry<Integer, PlayerDataManager.Note>> indexedNotes = new ArrayList<>();
+        for (int i = 0; i < notes.size(); i++) {
+            indexedNotes.add(new AbstractMap.SimpleEntry<>(i, notes.get(i)));
+        }
+
+        indexedNotes.sort((a, b) -> {
+            if (a.getValue().pinned && !b.getValue().pinned) return -1;
+            if (!a.getValue().pinned && b.getValue().pinned) return 1;
+            return 0;
+        });
+
+        int notesPerPage = 10;
+        int totalPages = (int) Math.ceil((double) indexedNotes.size() / notesPerPage);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        int startIndex = (page - 1) * notesPerPage;
+        int endIndex = Math.min(startIndex + notesPerPage, notes.size());
+        player.sendMessage(Text.translatable("private-messages.notesTitle"), false);
+
+        for (int i = startIndex; i < endIndex; i++) {
+            Map.Entry<Integer, PlayerDataManager.Note> entry = indexedNotes.get(i);
+            int realIndex = entry.getKey();
+            PlayerDataManager.Note note = entry.getValue();
+            String prefix = note.pinned ? "§e* §f" : "";
+            String message = config.notesFormat
+                    .replace("{index}", "[" + (realIndex + 1) + "] ")
+                    .replace("{dateTime}", note.dateTime)
+                    .replace("{content}", note.content);
+
+            player.sendMessage(Text.literal(prefix + message), false);
+        }
+
+        MutableText navigation = Text.literal("");
+
+        if (page > 1) {
+            navigation.append(
+                    Text.literal("§b<-")
+                            .setStyle(Style.EMPTY.withClickEvent(
+                                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm notes " + (page - 1))
+                            ).withHoverEvent(
+                                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.notesPreviousPage"))
+                            ))
+            );
+        } else {
+            navigation.append(Text.literal("§7<-"));
+        }
+
+        navigation.append(Text.literal(" §f| " + page + "/" + totalPages + " | "));
+
+        if (page < totalPages) {
+            navigation.append(
+                    Text.literal("§b->")
+                            .setStyle(Style.EMPTY.withClickEvent(
+                                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pm notes " + (page + 1))
+                            ).withHoverEvent(
+                                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.notesNextPage"))
+                            ))
+            );
+        } else {
+            navigation.append(Text.literal("§7->"));
+        }
+
+        player.sendMessage(navigation, false);
+
+        PlayerDataManager.savePlayerData(playerUUID);
+        return 1;
+    }
+
+    public static int notes(ServerCommandSource source, int page, String keyword) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player == null) return 0;
+
+        UUID playerUUID = player.getUuid();
+        List<PlayerDataManager.Note> notes = PlayerNotesManager.search(playerUUID, keyword);
+        if (notes.isEmpty()) {
+            player.sendMessage(Text.translatable("private-messages.notesNotFound"), false);
+            return 1;
+        }
+
+        int notesPerPage = 10;
+        int totalPages = (int) Math.ceil((double) notes.size() / notesPerPage);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        int startIndex = (page - 1) * notesPerPage;
+        int endIndex = Math.min(startIndex + notesPerPage, notes.size());
+        player.sendMessage(Text.translatable("private-messages.notesSearchTitle"), false);
+
+        for (int i = startIndex; i < endIndex; i++) {
+            PlayerDataManager.Note note = notes.get(i);
+            String prefix = note.pinned ? "§e[*] " : "";
+            String message = config.notesFormat
+                    .replace("{index}", "")
+                    .replace("{dateTime}", note.dateTime)
+                    .replace("{content}", note.content);
+
+            player.sendMessage(Text.literal(prefix + message), false);
+        }
+
+        MutableText navigation = Text.literal("");
+
+        if (page > 1) {
+            navigation.append(
+                    Text.literal("§b<-")
+                            .setStyle(Style.EMPTY.withClickEvent(
+                                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.format("/pm notes search \"%s\" %d", keyword, (page - 1)))
+                            ).withHoverEvent(
+                                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.notesPreviousPage"))
+                            ))
+            );
+        } else {
+            navigation.append(Text.literal("§7<-"));
+        }
+
+        navigation.append(Text.literal(" §f| " + page + "/" + totalPages + " | "));
+
+        if (page < totalPages) {
+            navigation.append(
+                    Text.literal("§b->")
+                            .setStyle(Style.EMPTY.withClickEvent(
+                                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.format("/pm notes search \"%s\" %d", keyword, (page + 1)))
+                            ).withHoverEvent(
+                                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("private-messages.notesNextPage"))
+                            ))
+            );
+        } else {
+            navigation.append(Text.literal("§7->"));
+        }
+
+        player.sendMessage(navigation, false);
+
+        PlayerDataManager.savePlayerData(playerUUID);
+        return 1;
     }
 
     public static int readOfflineMessages(ServerCommandSource source) {
@@ -161,7 +326,7 @@ public class MessageHandler {
                 PlayerHistoryManager.addMessage(target.getUuid(), new PlayerDataManager.Message(source.getName(), target.getName().getString(), message));
 
                 if (lastSenderData.notificationEnabled) {
-                    target.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    target.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                 }
 
                 return 1;
