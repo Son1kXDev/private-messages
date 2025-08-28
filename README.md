@@ -50,4 +50,4 @@ The mod allows you to customize various settings by editing the `private-message
 }
 ```
 ## License
-This mod is licensed under the MIT License. See [LICENSE](https://github.com/Son1kXDev/private-messages?tab=CC0-1.0-1-ov-file) for more information.
+This mod is licensed under the MIT License. See [LICENSE](https://github.com/Son1kXDev/private-messages?tab=License-1-ov-file) for more information.
