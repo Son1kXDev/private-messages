@@ -51,3 +51,7 @@ The mod allows you to customize various settings by editing the `private-message
 ```
 ## License
 This mod is licensed under the Creative Commons Attribution 4.0 International Public License. See [LICENSE](https://github.com/Son1kXDev/private-messages?tab=License-1-ov-file) for more information.
+
+## Discord
+
+Join [the discord server](https://discord.gg/Wa3pR7b) to tell me about the bug, suggest an update, or just chat with me.
