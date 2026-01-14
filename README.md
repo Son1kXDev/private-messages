@@ -1,4 +1,4 @@
-# Private Messages Mod for Minecraft (Fabric)
+# Private Messages Mod for Minecraft
 
 **Private Messages** is a Minecraft mod designed to enhance the in-game messaging system with features like private messaging, message replies, ignoring players, notifications and notes. This mod allows players to send direct messages to each other, reply to the last received message, and manage privacy with an ignore list.
 
